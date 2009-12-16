@@ -36,6 +36,7 @@ namespace SmartDeviceApplication
             this.menuItem4 = new System.Windows.Forms.MenuItem();
             this.menuItem6 = new System.Windows.Forms.MenuItem();
             this.menuItem5 = new System.Windows.Forms.MenuItem();
+            this.menuItem7 = new System.Windows.Forms.MenuItem();
             this.SuspendLayout();
             // 
             // mainMenu1
@@ -49,6 +50,7 @@ namespace SmartDeviceApplication
             this.menuItem1.MenuItems.Add(this.menuItem3);
             this.menuItem1.MenuItems.Add(this.menuItem4);
             this.menuItem1.MenuItems.Add(this.menuItem6);
+            this.menuItem1.MenuItems.Add(this.menuItem7);
             this.menuItem1.Text = "Message Options";
             // 
             // menuItem2
@@ -73,6 +75,11 @@ namespace SmartDeviceApplication
             this.menuItem5.Text = "Exit";
             this.menuItem5.Click += new System.EventHandler(this.menuItem5_Click);
             // 
+            // menuItem7
+            // 
+            this.menuItem7.Text = "Chat";
+            this.menuItem7.Click += new System.EventHandler(this.menuItem7_Click);
+            // 
             // MessageApplicationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -94,5 +101,6 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.MenuItem menuItem4;
         private System.Windows.Forms.MenuItem menuItem5;
         private System.Windows.Forms.MenuItem menuItem6;
+        private System.Windows.Forms.MenuItem menuItem7;
     }
 }

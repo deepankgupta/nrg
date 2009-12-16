@@ -52,6 +52,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChatForm.Designer.cs">
+      <DependentUpon>ChatForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MessageApplicationForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -71,21 +77,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="WriteMessageForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>WriteMessageForm.cs</DependentUpon>
-    </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="UtilityConfFile.cs" />
-    <Compile Include="WriteMessageForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="WriteMessageForm.Designer.cs">
-      <DependentUpon>WriteMessageForm.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="conf.xml">

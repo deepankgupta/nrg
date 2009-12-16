@@ -18,7 +18,7 @@ namespace SmartDeviceApplication
     {
         //Data Members
         private static readonly string ConfFile = System.IO.Path.GetDirectoryName( System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase)+"\\conf.xml";
-        private static XmlDocument xmlDoc;
+        public  static XmlDocument xmlDoc;
         struct Sequence
         {
             public Point destination;

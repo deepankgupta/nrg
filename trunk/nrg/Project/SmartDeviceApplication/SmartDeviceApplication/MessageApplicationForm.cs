@@ -19,6 +19,7 @@ namespace SmartDeviceApplication
         // Data Members
         private Node nodeDeviceObect;
         private NetworkClass networkHelpingObject;
+        private Hashtable neighbourFriendList;
         private Thread ReceiverThread;
 
         //Member Functions
@@ -37,18 +38,20 @@ namespace SmartDeviceApplication
             }
         }
 
-        //Write Message Event 
-        private void menuItem2_Click(object sender, EventArgs e)
-        {
-            WriteMessageForm textMessageForm = new WriteMessageForm();
-            textMessageForm.Show();
-        }
-
+   
         //Exit
         private void menuItem5_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
+
+        //CHAT
+        private void menuItem7_Click(object sender, EventArgs e)
+        {
+        
+       
+        }
+       
 
     }
 }
