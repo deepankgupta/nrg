@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <Configuration>
-  <Node ID="B" IP="192.168.1.2" NAME="Deepank" StartPt="(8,1)">
+  <Node ID="B" IP="127.0.0.1" NAME="Deepank" StartPt="(8,1)" PowerRange="100">
     <Sequence>
       <Hop>
         <Destination>(1,2)</Destination>
@@ -19,7 +19,7 @@
       </Hop>
     </Sequence>
   </Node>
-  <Node ID="E" IP="192.168.0.26" NAME="Admin" StartPt="(3,1)">
+  <Node ID="E" IP="192.168.0.26" NAME="Admin" StartPt="(3,1)" PowerRange="100">
     <Sequence>
       <Hop>
         <Destination>(5,5)</Destination>
@@ -38,7 +38,7 @@
       </Hop>
     </Sequence>
   </Node>
-  <Node ID="D" IP="192.168.0.27" NAME="Pushkar" StartPt="(8,10)">
+  <Node ID="D" IP="192.168.0.27" NAME="Pushkar" StartPt="(8,10)" PowerRange="100">
     <Sequence>
       <Hop>
         <Destination>(5,2)</Destination>
@@ -57,8 +57,7 @@
       </Hop>
     </Sequence>
   </Node>
-
-  <Node ID="C" IP="192.168.0.24" NAME="Nidhi" StartPt="(6,3)">
+  <Node ID="C" IP="192.168.0.24" NAME="Nidhi" StartPt="(6,3)" PowerRange="100">
     <Sequence>
       <Hop>
         <Destination>(9,4)</Destination>
@@ -77,7 +76,7 @@
       </Hop>
     </Sequence>
   </Node>
-  <Node ID="A" IP="192.168.0.25" NAME="Anupriya" StartPt="(8,2)">
+  <Node ID="A" IP="192.168.0.25" NAME="Anupriya" StartPt="(8,2)" PowerRange="100">
     <Sequence>
       <Hop>
         <Destination>(4,0)</Destination>

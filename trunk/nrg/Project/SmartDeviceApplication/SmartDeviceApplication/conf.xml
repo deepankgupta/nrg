@@ -1,98 +1,18 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <Configuration>
-  <Node ID="B" IP="127.0.0.1" NAME="Deepank" StartPt="(8,1)" PowerRange="100">
-    <Sequence>
-      <Hop>
-        <Destination>(1,2)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(4,7)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(1,4)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-    </Sequence>
+  <Node ID="B" IP="127.0.0.1" NAME="Ishaan" StartPt="(8,1)" PowerRange="100">
+    
   </Node>
-  <Node ID="E" IP="192.168.0.26" NAME="Admin" StartPt="(3,1)" PowerRange="100">
-    <Sequence>
-      <Hop>
-        <Destination>(5,5)</Destination>
-        <Speed>80</Speed>
-        <Pause>30</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(2,7)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(1,6)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-    </Sequence>
+  <Node ID="E" IP="192.168.0.26" NAME="Hitesh" StartPt="(3,1)" PowerRange="100">
+    
   </Node>
-  <Node ID="D" IP="192.168.0.27" NAME="Pushkar" StartPt="(8,10)" PowerRange="100">
-    <Sequence>
-      <Hop>
-        <Destination>(5,2)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(8,7)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(1,1)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-    </Sequence>
+  <Node ID="D" IP="192.168.0.27" NAME="Deepank" StartPt="(8,10)" PowerRange="100">
+    
   </Node>
-  <Node ID="C" IP="192.168.0.24" NAME="Nidhi" StartPt="(6,3)" PowerRange="100">
-    <Sequence>
-      <Hop>
-        <Destination>(9,4)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(6,3)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(9,9)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-    </Sequence>
+  <Node ID="C" IP="192.168.0.24" NAME="Karan" StartPt="(6,3)" PowerRange="100">
+    
   </Node>
-  <Node ID="A" IP="192.168.0.25" NAME="Anupriya" StartPt="(8,2)" PowerRange="100">
-    <Sequence>
-      <Hop>
-        <Destination>(4,0)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(2,2)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-      <Hop>
-        <Destination>(0,8)</Destination>
-        <Speed>80</Speed>
-        <Pause>60</Pause>
-      </Hop>
-    </Sequence>
+  <Node ID="A" IP="192.168.0.25" NAME="Japreet" StartPt="(8,2)" PowerRange="100">
+    
   </Node>
 </Configuration>

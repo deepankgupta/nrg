@@ -30,55 +30,68 @@ namespace SmartDeviceApplication
         private void InitializeComponent()
         {
             this.mainMenu1 = new System.Windows.Forms.MainMenu();
-            this.menuItem1 = new System.Windows.Forms.MenuItem();
-            this.menuItem2 = new System.Windows.Forms.MenuItem();
-            this.menuItem3 = new System.Windows.Forms.MenuItem();
-            this.menuItem4 = new System.Windows.Forms.MenuItem();
-            this.menuItem6 = new System.Windows.Forms.MenuItem();
-            this.menuItem5 = new System.Windows.Forms.MenuItem();
-            this.menuItem7 = new System.Windows.Forms.MenuItem();
+            this.Options = new System.Windows.Forms.MenuItem();
+            this.ChatMenuItem = new System.Windows.Forms.MenuItem();
+            this.ExitMenuItem = new System.Windows.Forms.MenuItem();
+            this.back = new System.Windows.Forms.MenuItem();
+            this.ChatList = new System.Windows.Forms.ListView();
+            this.MessageTextBox = new System.Windows.Forms.TextBox();
+            this.BuddyList = new System.Windows.Forms.ListView();
+            this.LblID = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // mainMenu1
             // 
-            this.mainMenu1.MenuItems.Add(this.menuItem1);
-            this.mainMenu1.MenuItems.Add(this.menuItem5);
+            this.mainMenu1.MenuItems.Add(this.Options);
+            this.mainMenu1.MenuItems.Add(this.back);
             // 
-            // menuItem1
+            // Options
             // 
-            this.menuItem1.MenuItems.Add(this.menuItem2);
-            this.menuItem1.MenuItems.Add(this.menuItem3);
-            this.menuItem1.MenuItems.Add(this.menuItem4);
-            this.menuItem1.MenuItems.Add(this.menuItem6);
-            this.menuItem1.MenuItems.Add(this.menuItem7);
-            this.menuItem1.Text = "Message Options";
+            this.Options.MenuItems.Add(this.ChatMenuItem);
+            this.Options.MenuItems.Add(this.ExitMenuItem);
+            this.Options.Text = "Message Options";
             // 
-            // menuItem2
+            // ChatMenuItem
             // 
-            this.menuItem2.Text = "Write Message";
-            this.menuItem2.Click += new System.EventHandler(this.menuItem2_Click);
+            this.ChatMenuItem.Text = "CHAT";
+            this.ChatMenuItem.Click += new System.EventHandler(this.ChatMenuItem_Click);
             // 
-            // menuItem3
+            // ExitMenuItem
             // 
-            this.menuItem3.Text = "InBox";
+            this.ExitMenuItem.Text = "Exit";
             // 
-            // menuItem4
+            // back
             // 
-            this.menuItem4.Text = "OutBox";
+            this.back.Text = "Back";
+            this.back.Click += new System.EventHandler(this.back_Click);
             // 
-            // menuItem6
+            // ChatList
             // 
-            this.menuItem6.Text = "Sent Messages";
+            this.ChatList.Location = new System.Drawing.Point(3, 3);
+            this.ChatList.Name = "ChatList";
+            this.ChatList.Size = new System.Drawing.Size(170, 146);
+            this.ChatList.TabIndex = 0;
             // 
-            // menuItem5
+            // MessageTextBox
             // 
-            this.menuItem5.Text = "Exit";
-            this.menuItem5.Click += new System.EventHandler(this.menuItem5_Click);
+            this.MessageTextBox.Location = new System.Drawing.Point(3, 155);
+            this.MessageTextBox.Name = "MessageTextBox";
+            this.MessageTextBox.Size = new System.Drawing.Size(170, 22);
+            this.MessageTextBox.TabIndex = 1;
             // 
-            // menuItem7
+            // BuddyList
             // 
-            this.menuItem7.Text = "Chat";
-            this.menuItem7.Click += new System.EventHandler(this.menuItem7_Click);
+            this.BuddyList.Location = new System.Drawing.Point(0, 3);
+            this.BuddyList.Name = "BuddyList";
+            this.BuddyList.Size = new System.Drawing.Size(173, 146);
+            this.BuddyList.TabIndex = 2;
+            // 
+            // LblID
+            // 
+            this.LblID.Location = new System.Drawing.Point(3, 152);
+            this.LblID.Name = "LblID";
+            this.LblID.Size = new System.Drawing.Size(152, 22);
+            this.LblID.Text = "  ";
             // 
             // MessageApplicationForm
             // 
@@ -86,21 +99,27 @@ namespace SmartDeviceApplication
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(176, 180);
+            this.Controls.Add(this.LblID);
+            this.Controls.Add(this.BuddyList);
+            this.Controls.Add(this.MessageTextBox);
+            this.Controls.Add(this.ChatList);
             this.Menu = this.mainMenu1;
             this.Name = "MessageApplicationForm";
             this.Text = "MessageApplicationForm";
+            this.Load += new System.EventHandler(this.MessageApplicationForm_Load);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.MenuItem menuItem1;
-        private System.Windows.Forms.MenuItem menuItem2;
-        private System.Windows.Forms.MenuItem menuItem3;
-        private System.Windows.Forms.MenuItem menuItem4;
-        private System.Windows.Forms.MenuItem menuItem5;
-        private System.Windows.Forms.MenuItem menuItem6;
-        private System.Windows.Forms.MenuItem menuItem7;
+        private System.Windows.Forms.MenuItem Options;
+        private System.Windows.Forms.MenuItem ChatMenuItem;
+        private System.Windows.Forms.MenuItem ExitMenuItem;
+        private System.Windows.Forms.MenuItem back;
+        private System.Windows.Forms.ListView ChatList;
+        private System.Windows.Forms.TextBox MessageTextBox;
+        private System.Windows.Forms.ListView BuddyList;
+        private System.Windows.Forms.Label LblID;
     }
 }
