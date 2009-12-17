@@ -7,9 +7,9 @@ namespace SmartDeviceApplication
 {
     public class Node
     {
-        //Data Members 
-        public string Id;
-        public string Name;
+
+        public static string Id;
+        public static string Name;
         private int PowerRange;
         private Hashtable hashSequenceList;
         private Point Position;
@@ -20,8 +20,6 @@ namespace SmartDeviceApplication
             public int zCoord;
         }
          
-
-        //Member Functions
         public Node()
         {
             UtilityConfFile.Initialize();

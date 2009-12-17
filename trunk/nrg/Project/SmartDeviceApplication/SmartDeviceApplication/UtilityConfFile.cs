@@ -8,22 +8,21 @@ using System.Xml;
 
 namespace SmartDeviceApplication
 {
+
     public class UtilityConfFile
     {
-        //Data Members
+      
         private static readonly string ConfFile = System.IO.Path.GetDirectoryName
                             (System.Reflection.Assembly.GetExecutingAssembly()
                             .GetName().CodeBase)+"\\conf.xml";
         public  static XmlDocument xmlDoc;
       
 
-
-        //Member Functions
         public static void Initialize()
         {
             try
             {
-                xmlDoc = new XmlDocument();
+                xmlDoc = new XmlDocument(); 
                 xmlDoc.Load(ConfFile);
             }
             catch (Exception e)
@@ -32,7 +31,7 @@ namespace SmartDeviceApplication
             }
         }
 
-
+        //Find Node Attributes from Conf File
         public static void FindValuesInXml(ref string nodeId,ref string nodeName,ref int nodePowerRange)
         {
 
@@ -43,9 +42,9 @@ namespace SmartDeviceApplication
             try
             {
                 XmlNode rootNode = xmlDoc.DocumentElement;
-                XmlNodeList xmlNodes = rootNode.ChildNodes;
+                XmlNodeList childXmlNodes = rootNode.ChildNodes;
 
-                foreach (XmlNode childNode in xmlNodes)
+                foreach (XmlNode childNode in childXmlNodes)
                 {
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("IP").Equals(NetworkClass.IpAddress.ToString()))
@@ -53,6 +52,7 @@ namespace SmartDeviceApplication
                         nodeId = currentElement.GetAttribute("ID").ToString();
                         nodeName = currentElement.GetAttribute("NAME").ToString();
                         powerRange = currentElement.GetAttribute("PowerRange").ToString();
+                        break;
                     }
                 }
             }
@@ -64,21 +64,23 @@ namespace SmartDeviceApplication
             nodePowerRange = int.Parse(powerRange);
         }
 
+        //Find IpAddress from Id
         public static string GetIPAddressByIDInConfFile(string nodeId)
         {
             string nodeIpAddress = "NA";
             try
             {
-                XmlNode rootNode = xmlDoc.DocumentElement;
-                XmlNodeList xmlNodes = rootNode.ChildNodes;
+                XmlNode rootXmlNode = xmlDoc.DocumentElement;
+                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
 
-                foreach (XmlNode childNode in xmlNodes)
+                foreach (XmlNode childNode in childXmlNodes)
                 {
 
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("ID").Equals(nodeId))
                     {
                         nodeIpAddress = currentElement.GetAttribute("IP").ToString();
+                        break;
                     }
                 }
             }

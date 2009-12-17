@@ -33,7 +33,6 @@ namespace SmartDeviceApplication
             this.Options = new System.Windows.Forms.MenuItem();
             this.ChatMenuItem = new System.Windows.Forms.MenuItem();
             this.ExitMenuItem = new System.Windows.Forms.MenuItem();
-            this.back = new System.Windows.Forms.MenuItem();
             this.ChatList = new System.Windows.Forms.ListView();
             this.MessageTextBox = new System.Windows.Forms.TextBox();
             this.BuddyList = new System.Windows.Forms.ListView();
@@ -43,7 +42,6 @@ namespace SmartDeviceApplication
             // mainMenu1
             // 
             this.mainMenu1.MenuItems.Add(this.Options);
-            this.mainMenu1.MenuItems.Add(this.back);
             // 
             // Options
             // 
@@ -59,11 +57,7 @@ namespace SmartDeviceApplication
             // ExitMenuItem
             // 
             this.ExitMenuItem.Text = "Exit";
-            // 
-            // back
-            // 
-            this.back.Text = "Back";
-            this.back.Click += new System.EventHandler(this.back_Click);
+            this.ExitMenuItem.Click += new System.EventHandler(this.ExitMenuItem_Click);
             // 
             // ChatList
             // 
@@ -116,7 +110,6 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.MenuItem Options;
         private System.Windows.Forms.MenuItem ChatMenuItem;
         private System.Windows.Forms.MenuItem ExitMenuItem;
-        private System.Windows.Forms.MenuItem back;
         private System.Windows.Forms.ListView ChatList;
         private System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.ListView BuddyList;

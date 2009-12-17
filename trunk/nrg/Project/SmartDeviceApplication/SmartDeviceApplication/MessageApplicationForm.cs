@@ -18,26 +18,22 @@ namespace SmartDeviceApplication
     {
         // Data Members
         private Node nodeDeviceObect;
-        private NetworkClass networkHelpingObject;
-        private RouterTableClass routerTableObject;
-        private Hashtable hashBuddyList;
-        private string buddyId;
-        private string buddyName;
-        private string buddyIpAddress;
+        private AodvProtocolClass aodvProtocolObject;
         private Thread ReceiverThread;
+        private static Hashtable hashBuddyList;
 
-        //Member Functions
+       
         public MessageApplicationForm()
         {
             InitializeComponent();
             try
             {
-                networkHelpingObject = new NetworkClass();
+                NetworkClass.InitializeIpAddress();
                 nodeDeviceObect = new Node();
+                RouterTableClass.Initialize();
                 hashBuddyList = new Hashtable();
-                buddyId = "NA";
-                ReceiverThread =new Thread(new ThreadStart(networkHelpingObject
-                                .ReceiverThreadFunction));
+                //ReceiverThread =new Thread(new ThreadStart(networkHelpingObject
+                //                .ReceiverThreadFunction));
             }
             catch (Exception e)
             {
@@ -47,34 +43,53 @@ namespace SmartDeviceApplication
 
         private void MessageApplicationForm_Load(object sender, EventArgs e)
         {
-            LblID.Text = "My Name: " + nodeDeviceObect.Name;
-            SetHashBuddyList();
-            ShowBuddyList();
-            ChatList.View = View.Details;
-            ChatList.FullRowSelect = true;
-            ChatList.Columns.Add("Chats", -2, HorizontalAlignment.Left);
+            try
+            {
+                SetHashBuddyList();
+                ShowBuddyList();
+                LblID.Text = "My Name: " + Node.Name;
+                ChatList.View = View.Details;
+                ChatList.FullRowSelect = true;
+                ChatList.Columns.Add("Chats", -2, HorizontalAlignment.Left);
+            }
+            catch (Exception Excep)
+            {
+                MessageBox.Show("SmartDevice Message Application Load Exception is occurred: " + Excep.Message);
+            }
         }
          
         private void ChatMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
-              
-              
-                buddyId = BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[0].Text;
-                buddyName = BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[1].Text;
-                buddyIpAddress = UtilityConfFile.GetIPAddressByIDInConfFile(buddyId);
-                
-                if (!buddyId.Equals("NA"))
+                if (ChatMenuItem.Text == "CHAT")
                 {
-                    HideBuddyWindow();
-                    ShowChatWindow();
-                    //SendBroadcastNTPacket();
-                    //isSourceNode = true;
+                    string buddyIdText = "NA";
+                    buddyIdText= BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[0].Text;
+                                       
+                    if (!buddyIdText.Equals("NA"))
+                    {
+                        aodvProtocolObject = new AodvProtocolClass(buddyIdText);
+                        HideBuddyWindow();
+                        ShowChatWindow();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please select a buddy to chat!");
+                    }
                 }
-                else
+                else if (ChatMenuItem.Text == "SEND")
                 {
-                    MessageBox.Show("Please select a buddy to chat!");
+                    if (MessageTextBox.Text.ToString().Length > 0)
+                    {
+                        aodvProtocolObject.SendMessage(MessageTextBox.Text);
+                        MessageTextBox.Text = "";
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please enter a message first!");
+                    }
+                    
                 }
             }
             catch (Exception ex)
@@ -84,7 +99,7 @@ namespace SmartDeviceApplication
            
         }
 
-        public void SetHashBuddyList()
+        public static void SetHashBuddyList()
         {
             try
             {
@@ -118,7 +133,7 @@ namespace SmartDeviceApplication
                 IDictionaryEnumerator ide = hashBuddyList.GetEnumerator();
                 while (ide.MoveNext())
                 {
-                    if (!ide.Key.ToString().Equals(nodeDeviceObect.Id))
+                    if (!ide.Key.ToString().Equals(Node.Id))
                     {
                         ListViewItem id = new ListViewItem(ide.Key.ToString());
                         id.SubItems.Add(ide.Value.ToString());
@@ -163,9 +178,18 @@ namespace SmartDeviceApplication
             BuddyList.Visible = true;
         }
 
-        private void back_Click(object sender, EventArgs e)
+        private void ExitMenuItem_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            if (ExitMenuItem.Text == "CLOSE")
+            {
+                HideChatWindow();
+                ShowBuddyWindow();
+   
+            }
+            else if (ExitMenuItem.Text == "EXIT")
+            {
+                Application.Exit();
+            }
         }
 
     }
