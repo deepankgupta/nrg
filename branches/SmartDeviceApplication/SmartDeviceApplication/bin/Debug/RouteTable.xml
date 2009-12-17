@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <Node DestinationID="B" Name="Ishaan">
+    <DestinationSequenceNum>0</DestinationSequenceNum>
+    <HopCount>0</HopCount>
+    <NextHop>B</NextHop>
+    <ExpirationTime>0</ExpirationTime>
+    <ActivePath>0</ActivePath>
+  </Node>
+
+  <Node DestinationID="E" NAME="Hitesh">
+    <DestinationSequenceNum>0</DestinationSequenceNum>
+    <HopCount>1</HopCount>
+    <NextHop>E</NextHop>
+    <ExpirationTime>0</ExpirationTime>
+    <ActivePath>0</ActivePath>
+  </Node>
+
+  <Node DestinationID="D" NAME="Deepank">
+    <DestinationSequenceNum>0</DestinationSequenceNum>
+    <HopCount>1</HopCount>
+    <NextHop>D</NextHop>
+    <ExpirationTime>0</ExpirationTime>
+    <ActivePath>0</ActivePath>
+  </Node>
+
+  <Node DestinationID="C" NAME="Karan">
+    <DestinationSequenceNum>EMPTY</DestinationSequenceNum>
+    <HopCount>1000</HopCount>
+    <NextHop>EMPTY</NextHop>
+    <ExpirationTime>EMPTY</ExpirationTime>
+    <ActivePath>EMPTY</ActivePath>
+  </Node>
+
+  <Node DestinationID="A" NAME="Japreet">
+    <DestinationSequenceNum>EMPTY</DestinationSequenceNum>
+    <HopCount>1000</HopCount>
+    <NextHop>EMPTY</NextHop>
+    <ExpirationTime>EMPTY</ExpirationTime>
+    <ActivePath>EMPTY</ActivePath>
+  </Node>
+  
+</Configuration>
