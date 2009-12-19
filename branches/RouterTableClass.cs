@@ -14,54 +14,21 @@ using System.IO;
 
 namespace SmartDeviceApplication
 {
+    /// <summary>
+    /// Route Table Class for Finding and Managing
+    /// Neibour Nodes Information.
+    /// </summary>
+    /// 
     public class RouterTableClass
     {
         public static XmlDocument routeTableXml;
-        private static readonly string RouteFile = System.IO.Path.GetDirectoryName
-                            (System.Reflection.Assembly.GetExecutingAssembly()
-                            .GetName().CodeBase)+"\\RouteTable.xml";
-
        
         public static void Initialize()
         {
-            routeTableXml = new XmlDocument();
-            routeTableXml.Load(RouteFile);
+            routeTableXml = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.RouteFile);
         }
 
-        // Check for Destination Path Existence
-        public static bool IsDestinationPathEmpty(string nodeId)
-        {
-            bool flag = false;
-            try
-            {
-                Monitor.Enter(routeTableXml);
 
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
-
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
-                    {
-                        if(currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
-                        {
-                            flag = true;
-                        }
-                        break;
-                    }
-                }
-                Monitor.Exit(routeTableXml);
-            }
-
-            catch (Exception ex)
-            {
-                MessageBox.Show("IsDestinationPathEmpty: An Exception has occured." + ex.ToString());
-            }
-            return flag;
-        }
-
-        //Get Destination Path Info
         public static ArrayList GetDestinationInfoFromRouteTable(string nodeId)
         {
             ArrayList destinationInfoList = new ArrayList();
@@ -95,7 +62,7 @@ namespace SmartDeviceApplication
             return destinationInfoList;
         }
 
-        //Get Neighbour Nodes List
+  
         public static ArrayList GetNeighbourNodes(string nodeId)
         {
             ArrayList neighbourNodeList = new ArrayList();
@@ -128,7 +95,7 @@ namespace SmartDeviceApplication
             return neighbourNodeList;
         }
 
-        //Find IpAddress from Id
+
         public static string GetIPAddressByIDInRouterTable(string nodeId)
         {
             string nodeIpAddress = "NA";
@@ -157,7 +124,10 @@ namespace SmartDeviceApplication
             return nodeIpAddress;
         }
 
-        //Make Reverse Path Entry 
+        /// <summary>
+        /// Set Path (or Reverse Path) for a Node from 
+        /// which it received a Packet in Route Table
+        /// </summary>
         public static void MakeReversePathEntryForNode(string nodeId)
         {
             try

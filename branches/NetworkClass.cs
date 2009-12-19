@@ -8,6 +8,12 @@ using System.Threading;
 
 namespace SmartDeviceApplication
 {
+
+    /// <summary>
+    /// Network Class sets up IP of given Node
+    /// & other Sockets related Info for sending
+    /// Packets over Network.
+    /// </summary>
     public class NetworkClass
     {
 

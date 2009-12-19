@@ -7,6 +7,13 @@ using System.Collections;
 
 namespace SmartDeviceApplication
 {
+
+    /// <summary>
+    /// AODV Protocol Class which helps in finding
+    /// Routes to Destination and managing Sending &
+    /// Receiving of Packets from various Destinations
+    /// </summary>
+  
     public class AodvProtocolClass
     {
         private static int broadcastId;
@@ -15,6 +22,7 @@ namespace SmartDeviceApplication
         private static bool IsUdpReceiverAlive;
         private static Hashtable senderBufferWindow;
         private static Hashtable receiverBufferWindow;
+        private static PacketBuilder packetBuilder;
 
 
         public AodvProtocolClass()
@@ -22,6 +30,7 @@ namespace SmartDeviceApplication
             SetBroadCastId();
             senderBufferWindow = new Hashtable();
             receiverBufferWindow = new Hashtable();
+            packetBuilder = new PacketBuilder();
  
         }
     
@@ -32,18 +41,21 @@ namespace SmartDeviceApplication
             broadcastId = random.Next(1, 100000);
         }
 
-
-        //Handle Received Packet
+        /// <summary>
+        /// Handles Different Packets Like RouteReq,
+        /// RouteReply,Data Packets etc. and updates 
+        /// Route Table also if required.
+        /// </summary>
         public static void HandleReceivePacket(string ReceivedXmlMessageString)
         {
             try
             {
                 string receivedPacketId;
-                Packet receivedPacket = new Packet();
-                receivedPacket = Packet.TransformXmlMessageIntoPacket(ReceivedXmlMessageString);
+
+                Packet receivedPacket = Packet.TransformXmlMessageIntoPacket(ReceivedXmlMessageString);
                 MessageBox.Show(ReceivedXmlMessageString);
 
-                //Route Request Packet
+                //Route Request Packet Received
                 if (receivedPacket.packetType == PacketConstants.ROUTE_REQUEST_PACKET)
                 {
                     receivedPacketId = receivedPacket.sourceId + receivedPacket.broadcastId.ToString();
@@ -63,21 +75,22 @@ namespace SmartDeviceApplication
                             if (currentDestinationSeqNum > receivedPacket.destinationSeqNum)
                             {
                                 //Send RouteReply
-                                Packet routeReplyPacket = new Packet();
-
-                                routeReplyPacket.SetPacketInfo(PacketConstants.ROUTE_REPLY_PACKET, PacketConstants.
-                                                          EmptyInt, Node.Id, receivedPacket.sourceId, receivedPacket.
-                                                          destinationId, Node.sequenceNumber, Convert.ToInt32
-                                                          (DestinationInfoList[0]), PacketConstants.EmptyString,
-                                                          Convert.ToInt32(DestinationInfoList[1]),
-                                                          Convert.ToInt32(DestinationInfoList[2]));
+                                Packet routeReplyPacket =
+                                                     packetBuilder.setPacketType(PacketConstants.ROUTE_REPLY_PACKET)
+                                                    .setCurrentId(Node.id)
+                                                    .setSourceId(Node.id)
+                                                    .setDestinationId(buddyId)
+                                                    .setSourceSeqNum(Convert.ToInt32(DestinationInfoList[0]))
+                                                    .setDestinationSeqNum(Convert.ToInt32(DestinationInfoList[1]))
+                                                    .setHopCount(Convert.ToInt32(DestinationInfoList[1]))
+                                                    .setLifeTime(Convert.ToInt32(DestinationInfoList[2]))
+                                                    .build();
 
                                 SendPacket(routeReplyPacket, receivedPacket.currentId);
 
                             }
                             else  //Forward to Neighbours
                             {
-                                //Increment Hop Count
                                 receivedPacket.hopCount++;
                                 ForwardPacketToNeighbours(receivedPacket);
                             }
@@ -106,8 +119,8 @@ namespace SmartDeviceApplication
                 MessageBox.Show("SendMessage: An Exception has occured." + ex.ToString());
             }
         }
-
      
+
         //Receiver Server Thread
         public static void ReceiveMessageServerThread()
         {
@@ -137,12 +150,11 @@ namespace SmartDeviceApplication
 
         }
 
-        //Forward Packet to Neighbours
         public static void ForwardPacketToNeighbours(Packet forwardPacket)
         {
             try
             {
-                ArrayList neighbourNodesList = RouterTableClass.GetNeighbourNodes(Node.Id);
+                ArrayList neighbourNodesList = RouterTableClass.GetNeighbourNodes(Node.id);
                 string XmlMessageStream = forwardPacket.CreateMessageXmlstringFromPacket();
 
                 foreach (string nodeId in neighbourNodesList)
@@ -158,22 +170,20 @@ namespace SmartDeviceApplication
             }
         }
 
-        //Send Packet ..Chat/RouteReply/Data  Packet
+        /// <summary>
+        /// Handles Sending of Different Packets which may 
+        /// be a Route Request,Chat Packet(Accept/Reject),
+        /// Data Packet and several others
+        /// </summary>
         public static void SendPacket(Packet sendPacket,string destinationIpAddress)
         {
             try
             {
                 string XmlMessageStream;
-
-                //Save Packet In Sender Buffer
                 SaveInSenderBuffer(sendPacket);
-
-                //Convert Packet to Xml message stream
                 XmlMessageStream = sendPacket.CreateMessageXmlstringFromPacket();
-
-                //send Packet
                 NetworkClass.sendMessageOverUdp(destinationIpAddress, XmlMessageStream);
-                //    networkHelpingObject.sendMessageOverUdp(neighbourIpAddress, XmlMessageStream);
+             
             }
             catch (Exception ex)
             {
@@ -186,10 +196,7 @@ namespace SmartDeviceApplication
         {
             try
             {
-                //Save Packet In Sender Buffer
                 SaveInSenderBuffer(routeRequestPacket);
-
-                //Forward To Neighbours
                 ForwardPacketToNeighbours(routeRequestPacket);
             }
             catch (Exception ex)
@@ -198,13 +205,12 @@ namespace SmartDeviceApplication
             }
 
         }
-
-        // Process the Text Packet
+      
         public void ProcessTextMessage(string textMessage)
         {
             string destinationIpAddress;
             ArrayList DestinationInfoList;
-
+            
             destinationIpAddress = RouterTableClass.GetIPAddressByIDInRouterTable(buddyId);
             DestinationInfoList = RouterTableClass.GetDestinationInfoFromRouteTable(buddyId);
                                 //contain Seq Num ,HopCount,LifeTime in Order           
@@ -214,25 +220,34 @@ namespace SmartDeviceApplication
 
                 if (!RouterTableClass.IsDestinationPathEmpty(buddyId))
                 {
-                    Packet startChatPacket = new Packet();
-
-                    //Start Chat Packet 
-                    startChatPacket.SetPacketInfo(PacketConstants.START_CHAT_PACKET, broadcastId,
-                                            Node.Id, Node.Id, buddyId, Node.sequenceNumber, Convert.ToInt32
-                                           (DestinationInfoList[0]), textMessage, Convert.ToInt32
-                                           (DestinationInfoList[1]), Convert.ToInt32(DestinationInfoList[2]));
+   
+                    //Start Chat Packet
+                    Packet startChatPacket =
+                                     packetBuilder.setPacketType(PacketConstants.START_CHAT_PACKET)
+                                    .setBroadcastId(broadcastId)
+                                    .setCurrentId(Node.id)
+                                    .setSourceId(Node.id)
+                                    .setDestinationId(buddyId)
+                                    .setSourceSeqNum(Convert.ToInt32(DestinationInfoList[0]))
+                                    .setDestinationSeqNum(Convert.ToInt32(DestinationInfoList[1]))
+                                    .setPayLoadMessage(textMessage)
+                                    .setHopCount(Convert.ToInt32(DestinationInfoList[1]))
+                                    .setLifeTime(Convert.ToInt32(DestinationInfoList[2]))
+                                    .build();
 
                     SendPacket(startChatPacket, destinationIpAddress);
                 }
                 else
                 {
-                    Packet routeRequestPacket = new Packet();
-
                     //Route Request Packet
-                    routeRequestPacket.SetPacketInfo(PacketConstants.ROUTE_REQUEST_PACKET, broadcastId,
-                                              Node.Id, Node.Id, buddyId, PacketConstants.EmptyInt, 
-                                              Convert.ToInt32(DestinationInfoList[0]), PacketConstants.
-                                              EmptyString,PacketConstants.EmptyInt, PacketConstants.EmptyInt);
+                    Packet routeRequestPacket =
+                                     packetBuilder.setPacketType(PacketConstants.ROUTE_REQUEST_PACKET)
+                                    .setCurrentId(Node.id)
+                                    .setSourceId(Node.id)
+                                    .setDestinationId(buddyId)
+                                    .setSourceSeqNum(Convert.ToInt32(DestinationInfoList[0]))
+                                    .setDestinationSeqNum(Convert.ToInt32(DestinationInfoList[1]))
+                                    .build();
 
                      SendBroadCastPacket(routeRequestPacket);
                 }
@@ -244,7 +259,6 @@ namespace SmartDeviceApplication
             }
         }
 
-        //Save in Sender Buffer
         private static void SaveInSenderBuffer(Packet sentPacket)
         {
             try
@@ -261,7 +275,6 @@ namespace SmartDeviceApplication
             }
         }
        
-        //Save in Receiver Buffer
         private static void SaveInReceiverBuffer(string receivedPacketId,Packet receivedPacket)
         {
             try

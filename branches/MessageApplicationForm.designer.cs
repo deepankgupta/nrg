@@ -36,7 +36,7 @@ namespace SmartDeviceApplication
             this.ChatList = new System.Windows.Forms.ListView();
             this.MessageTextBox = new System.Windows.Forms.TextBox();
             this.BuddyList = new System.Windows.Forms.ListView();
-            this.LblID = new System.Windows.Forms.Label();
+            this.LabelID = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // mainMenu1
@@ -80,12 +80,12 @@ namespace SmartDeviceApplication
             this.BuddyList.Size = new System.Drawing.Size(173, 146);
             this.BuddyList.TabIndex = 2;
             // 
-            // LblID
+            // LabelID
             // 
-            this.LblID.Location = new System.Drawing.Point(3, 152);
-            this.LblID.Name = "LblID";
-            this.LblID.Size = new System.Drawing.Size(152, 22);
-            this.LblID.Text = "  ";
+            this.LabelID.Location = new System.Drawing.Point(3, 152);
+            this.LabelID.Name = "LblID";
+            this.LabelID.Size = new System.Drawing.Size(152, 22);
+            this.LabelID.Text = "  ";
             // 
             // MessageApplicationForm
             // 
@@ -93,7 +93,7 @@ namespace SmartDeviceApplication
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(176, 180);
-            this.Controls.Add(this.LblID);
+            this.Controls.Add(this.LabelID);
             this.Controls.Add(this.BuddyList);
             this.Controls.Add(this.MessageTextBox);
             this.Controls.Add(this.ChatList);
@@ -113,6 +113,6 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.ListView ChatList;
         private System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.ListView BuddyList;
-        private System.Windows.Forms.Label LblID;
+        private System.Windows.Forms.Label LabelID;
     }
 }

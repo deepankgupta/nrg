@@ -14,9 +14,14 @@ using System.IO;
 
 namespace SmartDeviceApplication
 {
+
+    /// <summary>
+    /// Main Form Class controlling GUI and Initializing other Threads
+    /// and other Objects like RouteTable,AodvProtocol,Network etc .
+    /// </summary>
+    /// 
     public partial class MessageApplicationForm : Form
     {
-        // Data Members
         private Node nodeDeviceObect;
         private Thread ReceiverThread;
         private AodvProtocolClass aodvProtocolObject;
@@ -32,9 +37,6 @@ namespace SmartDeviceApplication
                 nodeDeviceObect = new Node();
                 RouterTableClass.Initialize();
                 hashBuddyList = new Hashtable();
-                ReceiverThread = new Thread(new ThreadStart
-                                (AodvProtocolClass.ReceiveMessageServerThread));
-                ReceiverThread.Start();
                                
             }
             catch (Exception e)
@@ -47,12 +49,15 @@ namespace SmartDeviceApplication
         {
             try
             {
+                ReceiverThread = new Thread(new ThreadStart(AodvProtocolClass
+                                            .ReceiveMessageServerThread));
+                ReceiverThread.Start();
                 SetHashBuddyList();
                 ShowBuddyList();
-                LblID.Text = "My Name: " + Node.Name;
                 ChatList.View = View.Details;
                 ChatList.FullRowSelect = true;
                 ChatList.Columns.Add("Chats", -2, HorizontalAlignment.Left);
+                LabelID.Text = "My Name: " + Node.name;
             }
             catch (Exception Excep)
             {
@@ -82,7 +87,7 @@ namespace SmartDeviceApplication
                 }
                 else if (ChatMenuItem.Text == "SEND")
                 {
-                    if (MessageTextBox.Text.ToString().Length > 0)
+                    if (MessageTextBox.Text.Length > 0)
                     {
                         aodvProtocolObject = new AodvProtocolClass();
                         aodvProtocolObject.ProcessTextMessage(MessageTextBox.Text);
@@ -117,7 +122,7 @@ namespace SmartDeviceApplication
                     string nodeName;
                     XmlElement currentElement = (XmlElement)childNode;
 
-                    if (!currentElement.GetAttribute("DestinationID").Equals(Node.Id))
+                    if (!currentElement.GetAttribute("DestinationID").Equals(Node.id))
                     {
                         nodeId = currentElement.GetAttribute("DestinationID").ToString();
                         nodeName = currentElement.GetAttribute("NAME").ToString();
@@ -146,7 +151,7 @@ namespace SmartDeviceApplication
                 IDictionaryEnumerator ide = hashBuddyList.GetEnumerator();
                 while (ide.MoveNext())
                 {
-                    if (!ide.Key.ToString().Equals(Node.Id))
+                    if (!ide.Key.ToString().Equals(Node.id))
                     {
                         ListViewItem id = new ListViewItem(ide.Key.ToString());
                         id.SubItems.Add(ide.Value.ToString());
@@ -181,13 +186,13 @@ namespace SmartDeviceApplication
 
         private void HideBuddyWindow()
         {
-            LblID.Visible = false;
+            LabelID.Visible = false;
             BuddyList.Visible = false;
         }
 
         private void ShowBuddyWindow()
         {
-            LblID.Visible = true;
+            LabelID.Visible = true;
             BuddyList.Visible = true;
         }
 
