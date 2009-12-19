@@ -21,8 +21,7 @@ namespace SmartDeviceApplication
         public  const int udpMessageSize = 512;
         public  static IPAddress IpAddress;
         public  static UdpClient udpClient;
-        public  static bool sentSuccess;
-   
+  
 
         public static void InitializeIpAddress()
         {
@@ -41,10 +40,9 @@ namespace SmartDeviceApplication
         //UDP for Message Sending
         public static bool sendMessageOverUdp(string destIpAddress, string textMessageStream)
         {
-            
+            bool isSent = false;
             try
             {
-                sentSuccess = false; 
                 IPAddress destinationIpAddress = IPAddress.Parse(destIpAddress);
                 udpClient = new UdpClient();
                 udpClient.Connect(destinationIpAddress, udpPort);
@@ -52,7 +50,7 @@ namespace SmartDeviceApplication
                 Byte[] inputToBeSent = new Byte[udpMessageSize];
                 inputToBeSent = System.Text.Encoding.ASCII.GetBytes(textMessageStream.ToCharArray());
                 int nBytesSent = udpClient.Send(inputToBeSent, inputToBeSent.Length);
-                sentSuccess = true;
+                isSent = true;
                
    
             }
@@ -62,7 +60,7 @@ namespace SmartDeviceApplication
                 //TODO
             }
             udpClient.Close();
-            return sentSuccess;
+            return isSent;
         }
     }
 }

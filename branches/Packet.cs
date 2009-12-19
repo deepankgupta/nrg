@@ -44,7 +44,7 @@ namespace SmartDeviceApplication
             destinationId = packetBuilder.destinationId;
             destinationSeqNum = packetBuilder.destinationSeqNum;
         }
-
+      
 
         // Convert Packet to XML stream
         public string CreateMessageXmlstringFromPacket()
@@ -118,14 +118,14 @@ namespace SmartDeviceApplication
         //Convert XML to Packet 
         public static Packet TransformXmlMessageIntoPacket(string ReceivedXmlPacketMessage)
         {
-
+                    
             Packet ReceivedPacket = new Packet();
             try
             {
-
+ 
                 XmlDocument receivedXmlDoc = new XmlDocument();
                 receivedXmlDoc.LoadXml(ReceivedXmlPacketMessage);
-
+           
 
                 XmlNode rootXmlNode = receivedXmlDoc.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -134,7 +134,7 @@ namespace SmartDeviceApplication
                 {
 
                     XmlElement tempXmlElement = (XmlElement)childNode;
-
+                    
                     //Type
                     if (tempXmlElement.Name.Equals(PacketConstants.PACKET_TYPE))
                     {
@@ -143,7 +143,7 @@ namespace SmartDeviceApplication
                     //ID
                     else if (tempXmlElement.Name.Equals(PacketConstants.BROADCAST_ID))
                     {
-                        ReceivedPacket.broadcastId = Convert.ToInt32(tempXmlElement.FirstChild.Value);
+                        ReceivedPacket.broadcastId =Convert.ToInt32( tempXmlElement.FirstChild.Value);
                     }
                     //sourceId
                     else if (tempXmlElement.Name.Equals(PacketConstants.SOURCE_ID))
@@ -158,7 +158,7 @@ namespace SmartDeviceApplication
                     //SourceSeqNum
                     else if (tempXmlElement.Name.Equals(PacketConstants.SOURCES_SEQ_NUM))
                     {
-                        ReceivedPacket.sourceSeqNum = Convert.ToInt32(tempXmlElement.FirstChild.Value);
+                        ReceivedPacket.sourceSeqNum= Convert.ToInt32( tempXmlElement.FirstChild.Value);
                     }
                     //DestinationSeqNum
                     else if (tempXmlElement.Name.Equals(PacketConstants.DESTINATION_SEQ_NUM))
@@ -168,12 +168,12 @@ namespace SmartDeviceApplication
                     //PayLoad
                     else if (tempXmlElement.Name.Equals(PacketConstants.PAYLOAD))
                     {
-                        ReceivedPacket.payloadMessage = tempXmlElement.FirstChild.Value;
+                        ReceivedPacket.payloadMessage= tempXmlElement.FirstChild.Value;
                     }
                     //HopCount
                     else if (tempXmlElement.Name.Equals(PacketConstants.HOP_COUNT))
                     {
-                        ReceivedPacket.hopCount = Convert.ToInt32(tempXmlElement.FirstChild.Value);
+                        ReceivedPacket.hopCount = Convert.ToInt32( tempXmlElement.FirstChild.Value);
                     }
                     //LifeTime
                     else if (tempXmlElement.Name.Equals(PacketConstants.LIFE_TIME))
@@ -186,14 +186,14 @@ namespace SmartDeviceApplication
                         ReceivedPacket.currentId = tempXmlElement.FirstChild.Value;
                     }
                 }
-
+                    
             }
             catch (Exception e)
             {
                 MessageBox.Show("Exception is occurred in transformXmlIntoPacket() : " + e.Message);
             }
             return ReceivedPacket;
-
+        
         }
     }
 }

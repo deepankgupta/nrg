@@ -3,6 +3,11 @@ using System.Xml;
 
 namespace SmartDeviceApplication
 {
+    /// <summary>
+    /// Class for storing XML Files Path 
+    /// and Loading XML Files  
+    /// </summary>
+
     public class LoadXmlFiles
     {
         public static readonly string ConfFile = System.IO.Path.GetDirectoryName

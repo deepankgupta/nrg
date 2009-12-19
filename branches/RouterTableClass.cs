@@ -16,9 +16,10 @@ namespace SmartDeviceApplication
 {
     /// <summary>
     /// Route Table Class for Finding and Managing
-    /// Neibour Nodes Information.
+    /// Neibour Nodes Information From Route Table stored
+    /// in an XML File.
     /// </summary>
-    /// 
+
     public class RouterTableClass
     {
         public static XmlDocument routeTableXml;
@@ -28,10 +29,12 @@ namespace SmartDeviceApplication
             routeTableXml = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.RouteFile);
         }
 
+        
 
-        public static ArrayList GetDestinationInfoFromRouteTable(string nodeId)
+        // Check for Destination Path Existence
+        public static bool IsDestinationPathEmpty(string nodeId)
         {
-            ArrayList destinationInfoList = new ArrayList();
+            bool flag = false;
 
             try
             {
@@ -45,9 +48,48 @@ namespace SmartDeviceApplication
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                     {
-                        destinationInfoList.Add(currentElement.SelectSingleNode("DestinationSequenceNum").InnerText);
-                        destinationInfoList.Add(currentElement.SelectSingleNode("HopCount").InnerText);
-                        destinationInfoList.Add(currentElement.SelectSingleNode("ExpirationTime").InnerText);
+
+                        if (currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
+                        {
+                            flag = true;
+                        }
+                        break;
+                    }
+   
+                }
+                Monitor.Exit(routeTableXml);
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show("IsDestinationPathEmpty: An Exception has occured." + ex.ToString());
+            }
+            return flag;
+        }
+
+        //Get Destination Path Info
+
+        public static Hashtable GetDestinationInfoFromRouteTable(string nodeId)
+        {
+            Hashtable destinationInfoList = new Hashtable();
+
+            try
+            {
+                Monitor.Enter(routeTableXml);
+
+                XmlNode rootXmlNode = routeTableXml.DocumentElement;
+                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+
+                foreach (XmlNode childNode in childXmlNodes)
+                {
+                    XmlElement currentElement = (XmlElement)childNode;
+                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                    {
+                        destinationInfoList.Add("DestinationSequenceNum", currentElement.SelectSingleNode
+                                                                        ("DestinationSequenceNum").InnerText);
+                        destinationInfoList.Add("HopCount", currentElement.SelectSingleNode("HopCount").InnerText);
+                        destinationInfoList.Add("LifeTime", currentElement.SelectSingleNode("LifeTime").InnerText);
+                        destinationInfoList.Add("NextHop", currentElement.SelectSingleNode("NextHop").InnerText);
                         break;
                     }
                 }
@@ -77,13 +119,12 @@ namespace SmartDeviceApplication
                 foreach (XmlNode childNode in childXmlNodes)
                 {
                     XmlElement currentElement = (XmlElement)childNode;
-                    if (!currentElement.GetAttribute("DestinationID").Equals(nodeId))
+
+                    if (!childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
                     {
-                        if (!childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
-                        {
-                            neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
-                        }
+                        neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
                     }
+
                 }
                 Monitor.Exit(routeTableXml);
             }
