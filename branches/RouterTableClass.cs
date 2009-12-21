@@ -19,19 +19,15 @@ namespace SmartDeviceApplication
     /// Neibour Nodes Information From Route Table stored
     /// in an XML File.
     /// </summary>
-
     public class RouterTableClass
     {
         public static XmlDocument routeTableXml;
-       
+
         public static void Initialize()
         {
             routeTableXml = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.RouteFile);
         }
 
-        
-
-        // Check for Destination Path Existence
         public static bool IsDestinationPathEmpty(string nodeId)
         {
             bool flag = false;
@@ -55,7 +51,7 @@ namespace SmartDeviceApplication
                         }
                         break;
                     }
-   
+
                 }
                 Monitor.Exit(routeTableXml);
             }
@@ -66,8 +62,6 @@ namespace SmartDeviceApplication
             }
             return flag;
         }
-
-        //Get Destination Path Info
 
         public static Hashtable GetDestinationInfoFromRouteTable(string nodeId)
         {
@@ -104,14 +98,13 @@ namespace SmartDeviceApplication
             return destinationInfoList;
         }
 
-  
         public static ArrayList GetNeighbourNodes(string nodeId)
         {
             ArrayList neighbourNodeList = new ArrayList();
 
             try
             {
-               Monitor.Enter(routeTableXml);
+                Monitor.Enter(routeTableXml);
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -136,13 +129,12 @@ namespace SmartDeviceApplication
             return neighbourNodeList;
         }
 
-
         public static string GetIPAddressByIDInRouterTable(string nodeId)
         {
             string nodeIpAddress = "NA";
             try
             {
-               Monitor.Enter(routeTableXml);
+                Monitor.Enter(routeTableXml);
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -152,7 +144,7 @@ namespace SmartDeviceApplication
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                     {
-                       nodeIpAddress = currentElement.GetAttribute("IpAddress");
+                        nodeIpAddress = currentElement.GetAttribute("IpAddress");
                     }
 
                 }
@@ -164,13 +156,9 @@ namespace SmartDeviceApplication
             }
             return nodeIpAddress;
         }
-
-        /// <summary>
-        /// Set Path (or Reverse Path) for a Node from 
-        /// which it received a Packet in Route Table
-        /// </summary>
-        public static void MakeReversePathEntryForNode(string nodeId)
+        public static string GetNameByIDInRouterTable(string nodeId)
         {
+            string nodeIpAddress = "NA";
             try
             {
                 Monitor.Enter(routeTableXml);
@@ -181,18 +169,76 @@ namespace SmartDeviceApplication
                 foreach (XmlNode childNode in childXmlNodes)
                 {
                     XmlElement currentElement = (XmlElement)childNode;
-
                     if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                     {
-                        currentElement.SelectSingleNode("HopCount").InnerText = "1";
-                        currentElement.SelectSingleNode("NextHop").InnerText = nodeId;
+                        nodeIpAddress = currentElement.GetAttribute("NAME");
                     }
+
                 }
+                Monitor.Exit(routeTableXml);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("MakeReversePathEntryForNode: An Exception has occured." + ex.ToString());
-            }                    
+                MessageBox.Show("GetNameByIDInRouterTable: An Exception has occured." + ex.ToString());
+            }
+            return nodeIpAddress;
+        }
+
+        /// <summary>
+        /// Set Path (Reverse or Forward Path) for Intiator Node 
+        /// (Source or Destination) and NeighbourNode from which
+        /// it received Packet
+        /// </summary>
+        public static void MakePathEntryForNode(string neighbourNodeId, Hashtable InitiatorInfoTable)
+        {
+            try
+            {
+                Monitor.Enter(routeTableXml);
+
+                XmlNode rootXmlNode = routeTableXml.DocumentElement;
+                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                IDictionaryEnumerator ide = InitiatorInfoTable.GetEnumerator();
+
+                foreach (XmlNode childNode in childXmlNodes)
+                {
+                    XmlElement currentElement = (XmlElement)childNode;
+
+                    if (currentElement.GetAttribute("DestinationID").Equals(neighbourNodeId))
+                    {
+                        currentElement.SelectSingleNode("HopCount").InnerText = "1";
+                        currentElement.SelectSingleNode("NextHop").InnerText = neighbourNodeId;
+                    }
+                    if (currentElement.GetAttribute("DestinationID").Equals(InitiatorInfoTable["DestinationID"].ToString()))
+                    {
+                        int storedHopCount = Convert.ToInt32(currentElement.SelectSingleNode("HopCount").InnerText);
+                        int receivedHopCount = Convert.ToInt32(InitiatorInfoTable["HopCount"].ToString());
+                        if (storedHopCount > receivedHopCount)
+                        {
+
+
+                            while (ide.MoveNext())
+                            {
+                                if (ide.Key.ToString().Equals("DestinationSequenceNum"))
+                                    currentElement.SelectSingleNode("DestinationSequenceNum").InnerText = ide.Value.ToString();
+
+                                if (ide.Key.ToString().Equals("HopCount"))
+                                    currentElement.SelectSingleNode("HopCount").InnerText = ide.Value.ToString();
+
+                                if (ide.Key.ToString().Equals("LifeTime"))
+                                    currentElement.SelectSingleNode("LifeTime").InnerText = ide.Value.ToString();
+
+                                if (ide.Key.ToString().Equals("NextHop"))
+                                    currentElement.SelectSingleNode("NextHop").InnerText = neighbourNodeId;
+                            }
+                        }
+                    }
+                }
+                Monitor.Exit(routeTableXml);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("MakePathEntryForNode: An Exception has occured." + ex.ToString());
+            }
         }
     }
 }

@@ -33,10 +33,10 @@ namespace SmartDeviceApplication
             this.Options = new System.Windows.Forms.MenuItem();
             this.ChatMenuItem = new System.Windows.Forms.MenuItem();
             this.ExitMenuItem = new System.Windows.Forms.MenuItem();
-            this.ChatList = new System.Windows.Forms.ListView();
-            this.MessageTextBox = new System.Windows.Forms.TextBox();
             this.BuddyList = new System.Windows.Forms.ListView();
+            this.MessageTextBox = new System.Windows.Forms.TextBox();
             this.LabelID = new System.Windows.Forms.Label();
+            this.ChatList = new System.Windows.Forms.ListView();
             this.SuspendLayout();
             // 
             // mainMenu1
@@ -56,36 +56,36 @@ namespace SmartDeviceApplication
             // 
             // ExitMenuItem
             // 
-            this.ExitMenuItem.Text = "Exit";
+            this.ExitMenuItem.Text = "EXIT";
             this.ExitMenuItem.Click += new System.EventHandler(this.ExitMenuItem_Click);
             // 
-            // ChatList
+            // BuddyList
             // 
-            this.ChatList.Location = new System.Drawing.Point(3, 3);
-            this.ChatList.Name = "ChatList";
-            this.ChatList.Size = new System.Drawing.Size(170, 146);
-            this.ChatList.TabIndex = 0;
+            this.BuddyList.Location = new System.Drawing.Point(-3, 0);
+            this.BuddyList.Name = "BuddyList";
+            this.BuddyList.Size = new System.Drawing.Size(176, 146);
+            this.BuddyList.TabIndex = 3;
             // 
             // MessageTextBox
             // 
-            this.MessageTextBox.Location = new System.Drawing.Point(3, 155);
+            this.MessageTextBox.Location = new System.Drawing.Point(3, 152);
             this.MessageTextBox.Name = "MessageTextBox";
             this.MessageTextBox.Size = new System.Drawing.Size(170, 22);
             this.MessageTextBox.TabIndex = 1;
             // 
-            // BuddyList
-            // 
-            this.BuddyList.Location = new System.Drawing.Point(0, 3);
-            this.BuddyList.Name = "BuddyList";
-            this.BuddyList.Size = new System.Drawing.Size(173, 146);
-            this.BuddyList.TabIndex = 2;
-            // 
             // LabelID
             // 
             this.LabelID.Location = new System.Drawing.Point(3, 152);
-            this.LabelID.Name = "LblID";
-            this.LabelID.Size = new System.Drawing.Size(152, 22);
+            this.LabelID.Name = "LabelID";
+            this.LabelID.Size = new System.Drawing.Size(173, 22);
             this.LabelID.Text = "  ";
+            // 
+            // ChatList
+            // 
+            this.ChatList.Location = new System.Drawing.Point(0, 3);
+            this.ChatList.Name = "ChatList";
+            this.ChatList.Size = new System.Drawing.Size(176, 134);
+            this.ChatList.TabIndex = 4;
             // 
             // MessageApplicationForm
             // 
@@ -93,10 +93,10 @@ namespace SmartDeviceApplication
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(176, 180);
+            this.Controls.Add(this.ChatList);
             this.Controls.Add(this.LabelID);
             this.Controls.Add(this.BuddyList);
             this.Controls.Add(this.MessageTextBox);
-            this.Controls.Add(this.ChatList);
             this.Menu = this.mainMenu1;
             this.Name = "MessageApplicationForm";
             this.Text = "MessageApplicationForm";
@@ -110,9 +110,9 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.MenuItem Options;
         private System.Windows.Forms.MenuItem ChatMenuItem;
         private System.Windows.Forms.MenuItem ExitMenuItem;
-        private System.Windows.Forms.ListView ChatList;
-        private System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.ListView BuddyList;
+        private System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.Label LabelID;
+        private System.Windows.Forms.ListView ChatList;
     }
 }

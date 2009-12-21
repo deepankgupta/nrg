@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace SmartDeviceApplication
 {
@@ -10,10 +11,19 @@ namespace SmartDeviceApplication
         /// The main entry point for the application.
         /// </summary>
 
+        private static Thread ReceiverThread;
+
         [MTAThread]
         static void Main()
         {
-            Application.Run(new MessageApplicationForm());
+            NetworkClass.InitializeIpAddress();
+            Node.InitializeNode();
+            ReceiverThread = new Thread(new ThreadStart(AodvProtocolClass.
+                                           ReceiveMessageServerThread));
+            ReceiverThread.Start();
+            RouterTableClass.Initialize();
+            AodvProtocolClass.Initialize();
+
         }
     }
 }

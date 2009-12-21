@@ -14,7 +14,8 @@ using System.IO;
 
 namespace SmartDeviceApplication
 {
-
+ 
+     
     /// <summary>
     /// Main Form Class controlling GUI and Initializing other Threads
     /// and other Objects like RouteTable,AodvProtocol,Network etc .
@@ -22,22 +23,32 @@ namespace SmartDeviceApplication
     /// 
     public partial class MessageApplicationForm : Form
     {
-        private Node nodeDeviceObect;
-        private Thread ReceiverThread;
-        private AodvProtocolClass aodvProtocolObject;
-        private static Hashtable hashBuddyList;
+        private Hashtable hashBuddyList;
+        public ChatWindowPanel showChatWindowDelegate;
+        public UpdateChatWindow updateChatWindowDelegate;
+        public HideChatWindowPanel hideChatWindowDelegate;
+        public Reset resetFormControls;
+        /// <summary>
+        ///Delegates To call Functions from
+        ///Receiver Thread///
+        ///</summary>
+        ///
+        public delegate void ChatWindowPanel(MessageApplicationForm messageForm);
+        public delegate void UpdateChatWindow(object[] objectItems);
+        public delegate void HideChatWindowPanel(MessageApplicationForm messageForm);
+        public delegate void Reset(MessageApplicationForm messageForm);
 
-       
+
         public MessageApplicationForm()
         {
             InitializeComponent();
             try
             {
-                NetworkClass.InitializeIpAddress();
-                nodeDeviceObect = new Node();
-                RouterTableClass.Initialize();
                 hashBuddyList = new Hashtable();
-                               
+                showChatWindowDelegate = new ChatWindowPanel(ChatWindowDisplay);
+                updateChatWindowDelegate = new UpdateChatWindow(UpdateChatDisplay);
+                hideChatWindowDelegate = new HideChatWindowPanel(HideChatWindow);
+                resetFormControls = new Reset(ResetFormControls);
             }
             catch (Exception e)
             {
@@ -45,19 +56,44 @@ namespace SmartDeviceApplication
             }
         }
 
+        public static void HideChatWindow(MessageApplicationForm messageForm)
+        {
+            messageForm.ShowBuddyWindow();
+        }
+
+        public static void UpdateChatDisplay(object[] objectItems)
+        {
+            MessageApplicationForm messageForm = (MessageApplicationForm)objectItems[0];
+
+            ListViewItem listViewItem = new ListViewItem(objectItems[1].ToString() + " says : "
+                                                            + objectItems[2].ToString());
+            messageForm.ChatList.Items.Add(listViewItem);
+            messageForm.ShowChatWindow();
+        }
+
+        public static void ChatWindowDisplay(MessageApplicationForm messageForm)
+        {
+            messageForm.Show();
+            messageForm.ShowChatWindow();
+        }
+
+        private static void ResetFormControls(MessageApplicationForm messageForm)
+        {
+
+        }
+
+
         private void MessageApplicationForm_Load(object sender, EventArgs e)
         {
             try
             {
-                ReceiverThread = new Thread(new ThreadStart(AodvProtocolClass
-                                            .ReceiveMessageServerThread));
-                ReceiverThread.Start();
                 SetHashBuddyList();
                 ShowBuddyList();
+                LabelID.Text = "My Name: " + Node.name;
                 ChatList.View = View.Details;
                 ChatList.FullRowSelect = true;
                 ChatList.Columns.Add("Chats", -2, HorizontalAlignment.Left);
-                LabelID.Text = "My Name: " + Node.name;
+        
             }
             catch (Exception Excep)
             {
@@ -69,37 +105,42 @@ namespace SmartDeviceApplication
         {
             try
             {
+
                 if (ChatMenuItem.Text == "CHAT")
                 {
                     string buddyIdText = "NA";
-                    buddyIdText= BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[0].Text;
-                                       
+                    buddyIdText = BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[0].Text;
+
                     if (!buddyIdText.Equals("NA"))
                     {
+                        AodvProtocolClass.chatInitiate = true;
                         AodvProtocolClass.buddyId = buddyIdText;
-                        HideBuddyWindow();
-                        ShowChatWindow();
+                        AodvProtocolClass.ProcessTextMessage("");
+                        buddyIdText = "NA";
+                        // this.Hide();
                     }
                     else
                     {
                         MessageBox.Show("Please select a buddy to chat!");
                     }
+
                 }
                 else if (ChatMenuItem.Text == "SEND")
                 {
                     if (MessageTextBox.Text.Length > 0)
                     {
-                        aodvProtocolObject = new AodvProtocolClass();
-                        aodvProtocolObject.ProcessTextMessage(MessageTextBox.Text);
+                        AodvProtocolClass.IsChating = true;
+                        AodvProtocolClass.ProcessTextMessage(MessageTextBox.Text);
                         MessageTextBox.Text = "";
                     }
                     else
                     {
                         MessageBox.Show("Please enter a message first!");
                     }
-                    
                 }
             }
+
+
             catch (Exception ex)
             {
                 MessageBox.Show("Exception in btnChat_Click(): " + ex.Message);
@@ -107,7 +148,7 @@ namespace SmartDeviceApplication
            
         }
 
-        public static void SetHashBuddyList()
+        public void SetHashBuddyList()
         {
             try
             {
@@ -137,11 +178,10 @@ namespace SmartDeviceApplication
             }
         }
 
-        private void ShowBuddyList()
+        public void ShowBuddyList()
         {
             try
             {
-                HideChatWindow();
                 ShowBuddyWindow();
                 BuddyList.View = View.Details;
                 BuddyList.FullRowSelect = true;
@@ -165,16 +205,10 @@ namespace SmartDeviceApplication
             }
         }
 
-        private void HideChatWindow()
-        {
-            MessageTextBox.Visible = false;
-            ChatList.Visible = false;
-            ExitMenuItem.Text = "EXIT";
-            ChatMenuItem.Text = "CHAT";
-        }
-
         private void ShowChatWindow()
         {
+            LabelID.Visible = false;
+            BuddyList.Visible = false;
             MessageTextBox.Visible = true;
             MessageTextBox.Focus();
             ChatList.View = View.Details;
@@ -184,31 +218,30 @@ namespace SmartDeviceApplication
             ChatMenuItem.Text = "SEND";
         }
 
-        private void HideBuddyWindow()
-        {
-            LabelID.Visible = false;
-            BuddyList.Visible = false;
-        }
-
         private void ShowBuddyWindow()
         {
             LabelID.Visible = true;
             BuddyList.Visible = true;
+            MessageTextBox.Visible = false;
+            ChatList.Visible = false;
+            ExitMenuItem.Text = "EXIT";
+            ChatMenuItem.Text = "CHAT";
+       
         }
+
 
         private void ExitMenuItem_Click(object sender, EventArgs e)
         {
             if (ExitMenuItem.Text == "CLOSE")
             {
-                HideChatWindow();
+                AodvProtocolClass.chatTerminate = true;
+                AodvProtocolClass.ProcessTextMessage("");
                 ShowBuddyWindow();
-   
             }
             else if (ExitMenuItem.Text == "EXIT")
             {
                 Application.Exit();
             }
         }
-
     }
 }

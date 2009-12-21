@@ -6,13 +6,14 @@ namespace SmartDeviceApplication
 {
     public class PacketConstants
     {
-        
+
         public const string DATA_PACKET = "DP";
         public const string ROUTE_REPLY_PACKET = "RRP";
         public const string ROUTE_ERROR_PACKET = "REP";
         public const string START_CHAT_PACKET = "SCP";
         public const string ACCEPT_START_CHAT_PACKET = "ASCP";
         public const string REJECT_START_CHAT_PACKET = "RSCP";
+        public const string TERMINATE_CHAT_PACKET = "TCP";
         public const string RECEIPT_PACKET = "RP";
         public const string ROUTE_REQUEST_PACKET = "RREQ";
 

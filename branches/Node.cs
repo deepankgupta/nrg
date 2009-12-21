@@ -11,31 +11,26 @@ namespace SmartDeviceApplication
     /// Class for Managing Mobile Node Information
     /// like its Id,Name,position etc.
     /// </summary>
-  
+
     public class Node
     {
 
         public static string id;
         public static string name;
         public static int sequenceNumber;
-        private int powerRange;
+        private static int powerRange;
         private Point Position;
-        struct  Point
+        struct Point
         {
             public int xCoord;
             public int yCoord;
             public int zCoord;
         }
-        private XmlDocument confXmlDoc ;
+        public static XmlDocument confXmlDoc;
 
-        private void Initialize()
+        public static void InitializeNode()
         {
             confXmlDoc = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.ConfFile);
-        }
-
-        //Find Node Attributes from Conf File
-        private void FindNodeValuesInConfFile()
-        {
 
             try
             {
@@ -55,16 +50,8 @@ namespace SmartDeviceApplication
             }
             catch (Exception ex)
             {
-                MessageBox.Show("FindIDbyIPAddress: An Exception has occured." + ex.ToString());
+                MessageBox.Show("InitializeNode: An Exception has occured." + ex.ToString());
             }
-        }            
-        
-        public Node()
-        {
-            Initialize();
-            FindNodeValuesInConfFile();
-        }       
-
+        }
     }
-
 }
