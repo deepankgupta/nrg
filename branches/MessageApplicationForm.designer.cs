@@ -1,3 +1,8 @@
+using System;
+using System.Windows.Forms;
+using System.Collections;
+
+
 namespace SmartDeviceApplication
 {
     partial class MessageApplicationForm
@@ -27,6 +32,27 @@ namespace SmartDeviceApplication
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
+        /// 
+
+        private static volatile MessageApplicationForm instance;
+        private static object syncRoot = new Object();
+
+        public static MessageApplicationForm messageFormInstance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new MessageApplicationForm();
+                    }
+                }
+                return instance;
+            }
+        }
+
         private void InitializeComponent()
         {
             this.mainMenu1 = new System.Windows.Forms.MainMenu();
@@ -111,7 +137,7 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.MenuItem ChatMenuItem;
         private System.Windows.Forms.MenuItem ExitMenuItem;
         private System.Windows.Forms.ListView BuddyList;
-        private System.Windows.Forms.TextBox MessageTextBox;
+        public System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.Label LabelID;
         private System.Windows.Forms.ListView ChatList;
     }

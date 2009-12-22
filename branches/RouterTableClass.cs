@@ -21,14 +21,32 @@ namespace SmartDeviceApplication
     /// </summary>
     public class RouterTableClass
     {
-        public static XmlDocument routeTableXml;
+        public  XmlDocument routeTableXml;
+        private static volatile RouterTableClass instance;
+        private static object syncRoot = new Object();
 
-        public static void Initialize()
+        public RouterTableClass()
         {
-            routeTableXml = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.RouteFile);
+            routeTableXml = XmlFileUtility.FindXmlDoc(XmlFileUtility.RouteFile);
         }
 
-        public static bool IsDestinationPathEmpty(string nodeId)
+        public static RouterTableClass routeTableInstance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new RouterTableClass();
+                    }
+                }
+                return instance;
+            }
+        }
+
+        public bool IsDestinationPathEmpty(string nodeId)
         {
             bool flag = false;
 
@@ -63,7 +81,7 @@ namespace SmartDeviceApplication
             return flag;
         }
 
-        public static Hashtable GetDestinationInfoFromRouteTable(string nodeId)
+        public Hashtable GetDestinationInfoFromRouteTable(string nodeId)
         {
             Hashtable destinationInfoList = new Hashtable();
 
@@ -98,7 +116,7 @@ namespace SmartDeviceApplication
             return destinationInfoList;
         }
 
-        public static ArrayList GetNeighbourNodes(string nodeId)
+        public ArrayList GetNeighbourNodes(string nodeId)
         {
             ArrayList neighbourNodeList = new ArrayList();
 
@@ -129,7 +147,7 @@ namespace SmartDeviceApplication
             return neighbourNodeList;
         }
 
-        public static string GetIPAddressByIDInRouterTable(string nodeId)
+        public string GetIPAddressByIDInRouterTable(string nodeId)
         {
             string nodeIpAddress = "NA";
             try
@@ -156,7 +174,8 @@ namespace SmartDeviceApplication
             }
             return nodeIpAddress;
         }
-        public static string GetNameByIDInRouterTable(string nodeId)
+
+        public string GetNameByIDInRouterTable(string nodeId)
         {
             string nodeIpAddress = "NA";
             try
@@ -189,7 +208,7 @@ namespace SmartDeviceApplication
         /// (Source or Destination) and NeighbourNode from which
         /// it received Packet
         /// </summary>
-        public static void MakePathEntryForNode(string neighbourNodeId, Hashtable InitiatorInfoTable)
+        public void MakePathEntryForNode(string neighbourNodeId, Hashtable InitiatorInfoTable)
         {
             try
             {

@@ -6,7 +6,7 @@ namespace SmartDeviceApplication
 {
     public class PacketConstants
     {
-
+        
         public const string DATA_PACKET = "DP";
         public const string ROUTE_REPLY_PACKET = "RRP";
         public const string ROUTE_ERROR_PACKET = "REP";

@@ -8,22 +8,40 @@ namespace SmartDeviceApplication
     static class Program
     {
         // <summary>
-        /// The main entry point for the application.
+        /// The main entry point for the application
+        /// and Loads Intial Network layer ,Application
+        /// Layer information and manages other Threads
+        /// as well .
         /// </summary>
 
         private static Thread ReceiverThread;
 
         [MTAThread]
-        static void Main()
+        public static void Main()
         {
-            NetworkClass.InitializeIpAddress();
-            Node.InitializeNode();
-            ReceiverThread = new Thread(new ThreadStart(AodvProtocolClass.
-                                           ReceiveMessageServerThread));
+            NetworkLayer networkLayer = NetworkLayer.networkLayerInstance;
+            ReceiverThread = new Thread(new ThreadStart(networkLayer.
+                                ReceiveMessageServerThread));
             ReceiverThread.Start();
-            RouterTableClass.Initialize();
-            AodvProtocolClass.Initialize();
+            MessageApplicationForm messageForm = MessageApplicationForm.
+                                                    messageFormInstance;
+            Application.Run(messageForm);
+        }
 
+
+        public static void TerminateAllThreads()
+        {
+            try
+            {
+                NetworkLayer networklayer = NetworkLayer.networkLayerInstance;
+                networklayer.udpReceiverSocket.Close();
+                Program.ReceiverThread.Abort();
+                Application.Exit();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("stop_server() exception occurred :" + e.Message);
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace SmartDeviceApplication
     /// Class for Managing Mobile Node Information
     /// like its Id,Name,position etc.
     /// </summary>
-
+  
     public class Node
     {
 
@@ -26,12 +26,36 @@ namespace SmartDeviceApplication
             public int yCoord;
             public int zCoord;
         }
+
         public static XmlDocument confXmlDoc;
+        private static volatile Node instance;
+        private static object syncRoot = new Object();
 
-        public static void InitializeNode()
+        public static Node nodeInstance
         {
-            confXmlDoc = LoadXmlFiles.FindXmlDoc(LoadXmlFiles.ConfFile);
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new Node();
+                    }
+                }
+                return instance;
+            }
+        }
 
+        public Node()
+        {
+            InitializeNode();
+        }
+
+        public void InitializeNode()
+        {
+            confXmlDoc = XmlFileUtility.FindXmlDoc(XmlFileUtility.ConfFile);
+      
             try
             {
                 XmlNode rootNode = confXmlDoc.DocumentElement;
@@ -52,6 +76,6 @@ namespace SmartDeviceApplication
             {
                 MessageBox.Show("InitializeNode: An Exception has occured." + ex.ToString());
             }
-        }
+        }            
     }
 }
