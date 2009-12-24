@@ -142,7 +142,7 @@ namespace SmartDeviceApplication
 
             catch (Exception ex)
             {
-                MessageBox.Show("GetNeighbourNodes : An Exception has occured." + ex.ToString());
+                //MessageBox.Show("GetNeighbourNodes : An Exception has occured." + ex.ToString());
             }
             return neighbourNodeList;
         }
@@ -217,6 +217,7 @@ namespace SmartDeviceApplication
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
                 IDictionaryEnumerator ide = InitiatorInfoTable.GetEnumerator();
+                bool updateTable=false;
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -231,10 +232,19 @@ namespace SmartDeviceApplication
                     {
                         int storedHopCount = Convert.ToInt32(currentElement.SelectSingleNode("HopCount").InnerText);
                         int receivedHopCount = Convert.ToInt32(InitiatorInfoTable["HopCount"].ToString());
+                        int storedDestinationSeqNum = Convert.ToInt32(currentElement.SelectSingleNode
+                                                                     ("DestinationSequenceNum").InnerText);
+                        int receivedDestinationSeqNum = Convert.ToInt32(InitiatorInfoTable
+                                                                     ["DestinationSequenceNum"].ToString());
+
+                        if (storedDestinationSeqNum <= receivedDestinationSeqNum)
+                            updateTable = true;
+
                         if (storedHopCount > receivedHopCount)
+                            updateTable = true;
+
+                        if (updateTable)
                         {
-
-
                             while (ide.MoveNext())
                             {
                                 if (ide.Key.ToString().Equals("DestinationSequenceNum"))
@@ -251,6 +261,7 @@ namespace SmartDeviceApplication
                             }
                         }
                     }
+
                 }
                 Monitor.Exit(routeTableXml);
             }
@@ -258,6 +269,28 @@ namespace SmartDeviceApplication
             {
                 MessageBox.Show("MakePathEntryForNode: An Exception has occured." + ex.ToString());
             }
+        }
+
+        public void DeleteRouteEntryForNode(string nodeId)
+        {
+            Monitor.Enter(routeTableXml);
+
+            XmlNode rootXmlNode = routeTableXml.DocumentElement;
+            XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+
+
+            foreach (XmlNode childNode in childXmlNodes)
+            {
+                XmlElement currentElement = (XmlElement)childNode;
+
+                if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                {
+                    currentElement.SelectSingleNode("HopCount").InnerText = PacketConstants.Infinity;
+                    currentElement.SelectSingleNode("NextHop").InnerText = "EMPTY";
+                    currentElement.SelectSingleNode("LifeTime").InnerText = PacketConstants.EmptyInt.ToString();
+                }
+            }
+            Monitor.Exit(routeTableXml);
         }
     }
 }

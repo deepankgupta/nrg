@@ -20,22 +20,31 @@ namespace SmartDeviceApplication
         public static void Main()
         {
             NetworkLayer networkLayer = NetworkLayer.networkLayerInstance;
+            TransportLayer transportLayer = TransportLayer.transportLayerInstance;
+            transportLayer.routeTimer = new TransportLayer.RouteTimer(TimerConstants.ROUTE_TIMER);
+            transportLayer.routeTimer.SetTimer();
+
             ReceiverThread = new Thread(new ThreadStart(networkLayer.
                                 ReceiveMessageServerThread));
+            ReceiverThread.Priority = ThreadPriority.Highest;
             ReceiverThread.Start();
             MessageApplicationForm messageForm = MessageApplicationForm.
                                                     messageFormInstance;
             Application.Run(messageForm);
+            //TODO SET ROUTE TABLE TIMER
         }
-
 
         public static void TerminateAllThreads()
         {
             try
             {
                 NetworkLayer networklayer = NetworkLayer.networkLayerInstance;
-                networklayer.udpReceiverSocket.Close();
+                TransportLayer transportLayer = TransportLayer.transportLayerInstance;
+
+                transportLayer.routeTimer.ReleaseTimer();
+                transportLayer.dataPacketTimer.ReleaseTimer();
                 Program.ReceiverThread.Abort();
+                networklayer.udpReceiverSocket.Close();
                 Application.Exit();
             }
             catch (Exception e)

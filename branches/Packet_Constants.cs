@@ -11,6 +11,8 @@ namespace SmartDeviceApplication
         public const string ROUTE_REPLY_PACKET = "RRP";
         public const string ROUTE_ERROR_PACKET = "REP";
         public const string START_CHAT_PACKET = "SCP";
+        public const string HELLO_MESSAGE = "HMSG";
+        public const string REPLY_HELLO_MESSAGE = "RHMSG";
         public const string ACCEPT_START_CHAT_PACKET = "ASCP";
         public const string REJECT_START_CHAT_PACKET = "RSCP";
         public const string TERMINATE_CHAT_PACKET = "TCP";
@@ -32,6 +34,8 @@ namespace SmartDeviceApplication
         public const string EmptyString = "~";
         public const string Infinity = "1000";
 
-
+        /*OTHER CONSTANTS*/
+        public const string TIMER_EXPIRED = "Timer Expired !";
+        public const string LINK_BREAK = "Link Break Occured !";
     }
 }

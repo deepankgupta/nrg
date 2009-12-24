@@ -15,10 +15,10 @@ namespace SmartDeviceApplication
     public class Node
     {
 
-        public static string id;
-        public static string name;
-        public static int sequenceNumber;
-        private static int powerRange;
+        public string id;
+        public string name;
+        public int sequenceNumber;
+        private int powerRange;
         private Point Position;
         struct Point
         {

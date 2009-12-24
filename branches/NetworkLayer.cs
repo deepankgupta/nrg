@@ -23,6 +23,7 @@ namespace SmartDeviceApplication
         public  Socket udpReceiverSocket;
         private bool IsUdpReceiverAlive;
         private TransportLayer transportLayer;
+        private object networkLock;
         private static volatile NetworkLayer instance;
         private static object syncRoot = new Object();
 
@@ -46,6 +47,7 @@ namespace SmartDeviceApplication
         {
             try
             {
+                networkLock=new object();
                 IPHostEntry localHostEntry = Dns.GetHostEntry(Dns.GetHostName());
                 IpAddress = localHostEntry.AddressList[0];
             }
@@ -58,37 +60,29 @@ namespace SmartDeviceApplication
 
         public void ReceiveMessageServerThread()
         {
-            try
-            {
-                IsUdpReceiverAlive = true;
-                udpReceiverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                IPEndPoint localIpEndPoint = new IPEndPoint(IpAddress,udpPort);
-                EndPoint localEndEntry = (localIpEndPoint);
-                udpReceiverSocket.Bind(localEndEntry);
-                transportLayer = TransportLayer.transportLayerInstance;
 
-                while (IsUdpReceiverAlive)
-                {
-                    byte[] saveOverBuffer = new byte[udpMessageSize];
-                    udpReceiverSocket.ReceiveFrom(saveOverBuffer, ref localEndEntry);
-                    string receivedMessage = System.Text.Encoding.ASCII.GetString(saveOverBuffer,
-                                                        0, saveOverBuffer.Length).ToString();
-                    transportLayer.HandleReceivePacket(receivedMessage.Substring(0, receivedMessage.IndexOf('\0')));
-                }
+            IsUdpReceiverAlive = true;
+            udpReceiverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            IPEndPoint localIpEndPoint = new IPEndPoint(IpAddress, udpPort);
+            EndPoint localEndEntry = (localIpEndPoint);
+            udpReceiverSocket.Bind(localEndEntry);
+            transportLayer = TransportLayer.transportLayerInstance;
 
-            }
-            catch (SocketException SockExcep)
+            while (IsUdpReceiverAlive)
             {
-                MessageBox.Show("Exception is occurred in ReceiveMessageServer() : " + SockExcep.Message);
-                //TODO
+                byte[] saveOverBuffer = new byte[udpMessageSize];
+                udpReceiverSocket.ReceiveFrom(saveOverBuffer, ref localEndEntry);
+                string receivedMessage = System.Text.Encoding.ASCII.GetString(saveOverBuffer,
+                                                    0, saveOverBuffer.Length).ToString();
+                transportLayer.HandleReceivePacket(receivedMessage.Substring(0, receivedMessage.IndexOf('\0')));
             }
 
         }
-
         public bool sendMessageOverUdp(string destIpAddress, string textMessageStream)
         {
             bool isSent = false;
-            try
+
+            lock (networkLock)
             {
                 IPAddress destinationIpAddress = IPAddress.Parse(destIpAddress);
                 udpClient = new UdpClient();
@@ -98,16 +92,11 @@ namespace SmartDeviceApplication
                 inputToBeSent = System.Text.Encoding.ASCII.GetBytes(textMessageStream.ToCharArray());
                 int nBytesSent = udpClient.Send(inputToBeSent, inputToBeSent.Length);
                 isSent = true;
-               
-   
+                udpClient.Close();
             }
-            catch (SocketException SockExcep)
-            {
-                MessageBox.Show("Exception is occurred in sendUDP() : " + SockExcep.Message);
-                //TODO
-            }
-            udpClient.Close();
+
             return isSent;
         }
+
     }
 }
