@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Net;
 using System.Data;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace SmartDeviceApplication
@@ -142,19 +143,21 @@ namespace SmartDeviceApplication
             public int deltaIncrement;
             public int keyReversePath;
             public object reversePathTableLock;
-            public Hashtable reversePathTable;
+            private Dictionary<int, string> reversePathTable;
 
             public ReversePathTimer(int count)
                 : base(count)
             {
                 keyReversePath = PacketConstants.EmptyInt;
                 reversePathTableLock = new object();
-                reversePathTable = new Hashtable();
+                reversePathTable = new Dictionary<int, string>();
                 SetTimer_Click = new Thread(new ThreadStart(ReversePathTimerClick));
             }
 
             public override void SetTimer()
             {
+                if (enabledTimer == true)
+                    return;
                 SetTimer_Click = new Thread(new ThreadStart(ReversePathTimerClick));
                 SetTimer_Click.Start();
             }
@@ -188,7 +191,7 @@ namespace SmartDeviceApplication
                 {
                     lock (reversePathTableLock)
                     {
-                        if (reversePathTable.Contains(keyReversePath))
+                        if (reversePathTable.ContainsKey(keyReversePath))
                         {
                             reversePathTable.Remove(keyReversePath);
                         }
@@ -245,7 +248,7 @@ namespace SmartDeviceApplication
                 {
                     lock (reversePathTableLock)
                     {
-                        if (reversePathTable.Contains(keyReversePath))
+                        if (reversePathTable.ContainsKey(keyReversePath))
                             flag = true;
                     }
                 }
@@ -263,14 +266,14 @@ namespace SmartDeviceApplication
             public int deltaIncrement;
             public string packetId;
             public object routeRequestWindowLock;
-            public Hashtable receivedRouteRequestWindow;
+            public Dictionary<string, Packet> receivedRouteRequestWindow;
 
             public RouteRequestTimer(int count)
                 : base(count)
             {
                 packetId = "NA";
                 routeRequestWindowLock = new object();
-                receivedRouteRequestWindow = new Hashtable();
+                receivedRouteRequestWindow = new Dictionary<string, Packet>();
                 SetTimer_Click = new Thread(new ThreadStart(RouteRequestTimerClick));
             }
 
@@ -308,7 +311,7 @@ namespace SmartDeviceApplication
                 {
                     lock (routeRequestWindowLock)
                     {
-                        if (receivedRouteRequestWindow.Contains(packetId))
+                        if (receivedRouteRequestWindow.ContainsKey(packetId))
                         {
                             receivedRouteRequestWindow.Remove(packetId);
                         }
@@ -352,7 +355,7 @@ namespace SmartDeviceApplication
                 {
                     lock (routeRequestWindowLock)
                     {
-                        if (receivedRouteRequestWindow.Contains(packetId))
+                        if (receivedRouteRequestWindow.ContainsKey(packetId))
                             flag = true;
                     }
                 }
@@ -385,14 +388,14 @@ namespace SmartDeviceApplication
             public int deltaIncrement;
             public string packetId;
             public object routeReplyWindowLock;
-            public Hashtable receivedRouteReplyWindow;
+            public Dictionary<string, Packet> receivedRouteReplyWindow;
 
             public RouteReplyTimer(int count)
                 : base(count)
             {
                 packetId = "NA";
                 routeReplyWindowLock = new object();
-                receivedRouteReplyWindow = new Hashtable();
+                receivedRouteReplyWindow = new Dictionary<string, Packet>();
                 SetTimer_Click = new Thread(new ThreadStart(RouteReplyTimerClick));
             }
 
@@ -446,7 +449,7 @@ namespace SmartDeviceApplication
                 {
                     lock (routeReplyWindowLock)
                     {
-                        if (receivedRouteReplyWindow.Contains(packetId))
+                        if (receivedRouteReplyWindow.ContainsKey(packetId))
                             flag = true;
                     }
                 }
@@ -486,7 +489,7 @@ namespace SmartDeviceApplication
                 {
                     lock (routeReplyWindowLock)
                     {
-                        if (receivedRouteReplyWindow.Contains(packetId))
+                        if (receivedRouteReplyWindow.ContainsKey(packetId))
                         {
                             receivedRouteReplyWindow.Remove(packetId);
                         }
@@ -506,13 +509,13 @@ namespace SmartDeviceApplication
             public int deltaIncrement;
             public string dataPacketId;
             public object senderWindowLock;
-            public Hashtable senderBufferWindow;
+            public Dictionary<string, Packet> senderBufferWindow;
 
             public DataPacketTimer(int count)
                 : base(count)
             {
                 senderWindowLock = new object();
-                senderBufferWindow = new Hashtable();
+                senderBufferWindow = new Dictionary<string, Packet>();
                 SetTimer_Click = new Thread(new ThreadStart(DataPacketTimerClick));
             }
 
@@ -614,6 +617,17 @@ namespace SmartDeviceApplication
 
         }
 
+
+
+        public void AddItemsToHashTable(Hashtable InitiatorInfoTable, string currentId,
+                                         int hopCount, string sourceId, int seqNum)
+        {
+            InitiatorInfoTable.Add("NextHop", currentId);
+            InitiatorInfoTable.Add("HopCount", hopCount + 1);
+            InitiatorInfoTable.Add("DestinationID", sourceId);
+            InitiatorInfoTable.Add("DestinationSequenceNum", seqNum);
+        }
+
         [MethodImpl(MethodImplOptions.Synchronized)]
         public void HandleReceivePacket(string ReceivedXmlMessageString)
         {
@@ -623,11 +637,8 @@ namespace SmartDeviceApplication
                                                         broadcastId.ToString();
 
             Hashtable InitiatorInfoTable = new Hashtable();
-            InitiatorInfoTable.Add("NextHop", receivedPacket.currentId);
-            InitiatorInfoTable.Add("HopCount", receivedPacket.hopCount + 1);
-            InitiatorInfoTable.Add("DestinationID", receivedPacket.sourceId);
-            InitiatorInfoTable.Add("DestinationSequenceNum", receivedPacket.sourceSeqNum);
-
+            AddItemsToHashTable(InitiatorInfoTable, receivedPacket.currentId, receivedPacket.hopCount + 1,
+                                            receivedPacket.sourceId, receivedPacket.sourceSeqNum);
 
             //1. Route Request
             if (receivedPacketType.Equals(PacketConstants.ROUTE_REQUEST_PACKET))
@@ -727,11 +738,8 @@ namespace SmartDeviceApplication
             else if (receivedPacketType.Equals(PacketConstants.ROUTE_REPLY_PACKET))
             {
                 InitiatorInfoTable.Clear();
-                InitiatorInfoTable.Add("NextHop", receivedPacket.currentId);
-                InitiatorInfoTable.Add("HopCount", receivedPacket.hopCount + 1);
-                InitiatorInfoTable.Add("DestinationID", receivedPacket.destinationId);
-                InitiatorInfoTable.Add("DestinationSequenceNum", receivedPacket.sourceSeqNum);
-
+                AddItemsToHashTable(InitiatorInfoTable, receivedPacket.currentId, receivedPacket.hopCount + 1,
+                                          receivedPacket.destinationId, receivedPacket.destinationSeqNum);
 
                 if (!routeReplyTimer.IsPresentInRouteReplyBuffer(receivedPacketId))
                 {
@@ -799,7 +807,6 @@ namespace SmartDeviceApplication
             //3. Route Error 
             else if (receivedPacketType.Equals(PacketConstants.ROUTE_ERROR_PACKET))
             {
-
                 if (receivedPacket.sourceId.Equals(node.id))
                 {
                     dataPacketTimer.dataPacketId = receivedPacketId;
@@ -823,6 +830,7 @@ namespace SmartDeviceApplication
                         ForwardToNextNeighbour(receivedPacket, destinationIpAddress);
                     }
                 }
+
             }
             else if (receivedPacketType.Equals(PacketConstants.HELLO_MESSAGE))
             {
@@ -885,8 +893,13 @@ namespace SmartDeviceApplication
             try
             {
                 string XmlMessageStream = sendPacket.CreateMessageXmlstringFromPacket();
-                dataPacketTimer.SaveInSenderBuffer(sendPacket);
-                dataPacketTimer.SetTimer();
+
+                if (!(sendPacket.packetType.Equals(PacketConstants.TERMINATE_CHAT_PACKET) ||
+                    sendPacket.packetType.Equals(PacketConstants.REJECT_START_CHAT_PACKET)))
+                {
+                    dataPacketTimer.SaveInSenderBuffer(sendPacket);
+                    dataPacketTimer.SetTimer();
+                }
 
                 if (!routeTable.IsDestinationPathEmpty(sendPacket.destinationId))
                 {
@@ -948,3 +961,4 @@ namespace SmartDeviceApplication
         }
     }
 }
+
