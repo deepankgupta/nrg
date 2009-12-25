@@ -21,6 +21,7 @@ namespace SmartDeviceApplication
         private Node node;
         private bool chatInitiate;
         private int broadcastId;
+        private string sessionId;
         private bool hasReceivedAck;
         private bool hasSentData;
         private RouterTableClass routeTable;
@@ -33,6 +34,7 @@ namespace SmartDeviceApplication
         {
             node = Node.nodeInstance;
             chatInitiate = false;
+            sessionId = "";
             hasReceivedAck = false;
             hasSentData = false;
             SetBroadCastId();
@@ -66,11 +68,12 @@ namespace SmartDeviceApplication
             hasReceivedAck = false;
             hasSentData = false;
             chatInitiate = false;
+            sessionId = "";
             messageForm = MessageApplicationForm.messageFormInstance;
             messageForm.Invoke(messageForm.hideChatWindowDelegate, messageForm);
             messageForm.Invoke(messageForm.resetFormControls, messageForm);
-
-        }
+        } 
+        
 
         public void PerformSenderAction(string optionSelected)
         {
@@ -80,7 +83,7 @@ namespace SmartDeviceApplication
             PacketBuilder packetBuilder = new PacketBuilder();
             transportLayer = TransportLayer.transportLayerInstance;
             messageForm = MessageApplicationForm.messageFormInstance;
-
+           
             packetBuilder = packetBuilder.setBroadcastId(broadcastId)
                               .setCurrentId(node.id)
                               .setSourceId(node.id)
@@ -105,7 +108,7 @@ namespace SmartDeviceApplication
                     MessageBox.Show("Already A Chat In Progress",
                     "Hold On", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
                      MessageBoxDefaultButton.Button1);
-                    return;
+                     return;
                 }
             }
 
@@ -146,110 +149,71 @@ namespace SmartDeviceApplication
                 transportLayer = TransportLayer.transportLayerInstance;
                 messageForm = MessageApplicationForm.messageFormInstance;
 
-                //Destination Node Receives
-                if (receivedPacket.destinationId.Equals(node.id))
+
+                string buddyName;
+                string acceptChat = "No";
+                SetBroadCastId();
+                PacketBuilder packetBuilder = new PacketBuilder();
+                packetBuilder = packetBuilder.setBroadcastId(broadcastId)
+                              .setCurrentId(node.id)
+                              .setSourceId(receivedPacket.destinationId)
+                              .setDestinationId(receivedPacket.sourceId)
+                              .setSourceSeqNum(receivedPacket.destinationSeqNum)
+                              .setDestinationSeqNum(receivedPacket.sourceSeqNum);
+
+                if (chatInitiate == false)
                 {
-                    string buddyName;
-                    string acceptChat = "No";
-                    if (chatInitiate == false)
+                    buddyName = routeTable.GetNameByIDInRouterTable(receivedPacket.sourceId);
+                    acceptChat = MessageBox.Show(buddyName + " wants to chat with you! ",
+                                                "Start Chat Packet", MessageBoxButtons.YesNo,
+                                                MessageBoxIcon.Question, MessageBoxDefaultButton.Button1).ToString();
+                    if (acceptChat.Equals("Yes"))
                     {
-                        buddyName = routeTable.GetNameByIDInRouterTable(receivedPacket.sourceId);
-                        acceptChat = MessageBox.Show(buddyName + " wants to chat with you! ",
-                                                    "Start Chat Packet", MessageBoxButtons.YesNo,
-                                                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button1).ToString();
-                        if (acceptChat.Equals("Yes"))
-                        {
-                            SetBroadCastId();
-                            buddyId = receivedPacket.sourceId;
-                            hasReceivedAck = true;
+                        buddyId = receivedPacket.sourceId;
+                        sessionId = node.id + buddyId;
+                        hasReceivedAck = true;
 
-                            PacketBuilder packetBuilder = new PacketBuilder();
-                            Packet acceptChatPacket =
-                                           packetBuilder.setPacketType(PacketConstants.ACCEPT_START_CHAT_PACKET)
-                                          .setBroadcastId(broadcastId)
-                                          .setCurrentId(node.id)
-                                          .setSourceId(receivedPacket.destinationId)
-                                          .setDestinationId(receivedPacket.sourceId)
-                                          .setSourceSeqNum(receivedPacket.destinationSeqNum)
-                                          .setDestinationSeqNum(receivedPacket.sourceSeqNum)
-                                          .build();
+                        Packet acceptChatPacket = packetBuilder.setPacketType(PacketConstants.ACCEPT_START_CHAT_PACKET)
+                                                  .build();
+                        transportLayer.SendPacket(acceptChatPacket);
+                        messageForm.Invoke(messageForm.showChatWindowDelegate, messageForm);
 
-                            transportLayer.SendPacket(acceptChatPacket);
-                            messageForm.Invoke(messageForm.showChatWindowDelegate, messageForm);
-
-                        }
-                    }
-                    if (acceptChat.Equals("No"))
-                    {
-                        //TODO Send Reject Chat Message
                     }
                 }
-                else
+                if (acceptChat.Equals("No"))
                 {
-                    if (!routeTable.IsDestinationPathEmpty(receivedPacket.destinationId))
-                    {
-                        Hashtable DestinationInfoList = routeTable.GetDestinationInfoFromRouteTable
-                                                                (receivedPacket.destinationId);
-                        string destinationIpAddress = routeTable.GetIPAddressByIDInRouterTable
-                                                     (DestinationInfoList["NextHop"].ToString());
-                        transportLayer.ForwardToNextNeighbour(receivedPacket, destinationIpAddress);
-
-                    }
-                    else
-                    {
-                        receivedPacket.payloadMessage = "LINK BREAK";
-                        receivedPacket.packetType = PacketConstants.ROUTE_ERROR_PACKET;
-                        string XmlMessageStream = receivedPacket.CreateMessageXmlstringFromPacket();
-                        transportLayer.HandleReceivePacket(XmlMessageStream);
-                    }
+                    Packet rejectChatPacket = packetBuilder.setPacketType(PacketConstants.REJECT_START_CHAT_PACKET)
+                                                  .build();
+                    transportLayer.SendPacket(rejectChatPacket);
                 }
             }
 
             // 2.Accept START CHAT 
             else if (receivedPacketType.Equals(PacketConstants.ACCEPT_START_CHAT_PACKET))
             {
-
-                if (receivedPacket.destinationId.Equals(node.id))
+                string storedPacketId = transportLayer.dataPacketTimer.dataPacketId;
+                if (!storedPacketId.Equals("NA"))
                 {
-                    string storedPacketId = transportLayer.dataPacketTimer.dataPacketId;
-                    if (!storedPacketId.Equals("NA"))
-                    {
-                        hasReceivedAck = false;
-                        transportLayer.dataPacketTimer.ReleaseTimer();
-                        string buddyName = routeTable.GetNameByIDInRouterTable(receivedPacket.sourceId);
+                    hasReceivedAck = false;
+                    sessionId = node.id + buddyId;
+                    transportLayer.dataPacketTimer.ReleaseTimer();
+                    string buddyName = routeTable.GetNameByIDInRouterTable(receivedPacket.sourceId);
 
-                        MessageBox.Show(buddyName + " agrees to talk with you",
-                        "Confirmation Packet", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
-                        MessageBoxDefaultButton.Button1);
-                        messageForm.Invoke(messageForm.showChatWindowDelegate, messageForm);
-                    }
-                }
-                else
-                {
-                    if (!routeTable.IsDestinationPathEmpty(receivedPacket.destinationId))
-                    {
-                        Hashtable DestinationInfoList = routeTable.GetDestinationInfoFromRouteTable
-                                                                (receivedPacket.destinationId);
-                        string destinationIpAddress = routeTable.GetIPAddressByIDInRouterTable
-                                                     (DestinationInfoList["NextHop"].ToString());
-                        transportLayer.ForwardToNextNeighbour(receivedPacket, destinationIpAddress);
-
-                    }
-                    else
-                    {
-                        receivedPacket.payloadMessage = "LINK BREAK";
-                        receivedPacket.packetType = PacketConstants.ROUTE_ERROR_PACKET;
-                        string XmlMessageStream = receivedPacket.CreateMessageXmlstringFromPacket();
-                        transportLayer.HandleReceivePacket(XmlMessageStream);
-                    }
+                    MessageBox.Show(buddyName + " agrees to talk with you",
+                    "Confirmation Packet", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
+                    MessageBoxDefaultButton.Button1);
+                    messageForm.Invoke(messageForm.showChatWindowDelegate, messageForm);
                 }
             }
 
             //3. DATA PACKET
             else if (receivedPacketType.Equals(PacketConstants.DATA_PACKET))
             {
-                if (receivedPacket.destinationId.Equals(node.id))
+                string currentSessionId = node.id + receivedPacket.sourceId;
+
+                if (currentSessionId.Equals(sessionId))
                 {
+
                     string storedPacketId = transportLayer.dataPacketTimer.dataPacketId;
 
                     if (hasReceivedAck == true)
@@ -270,30 +234,42 @@ namespace SmartDeviceApplication
                     objectItems[2] = receivedPacket.payloadMessage;
 
                     messageForm.Invoke(messageForm.updateChatWindowDelegate, new object[] { objectItems });
-
-                }
-                else
-                {
-                    //Forward it to destination
-                    transportLayer.SendPacket(receivedPacket);
                 }
             }
 
-             //4. TERMINATE CHAT
+         //4. TERMINATE CHAT
             else if (receivedPacketType.Equals(PacketConstants.TERMINATE_CHAT_PACKET))
             {
+                string currentSessionId = node.id + receivedPacket.sourceId;
+
+                if (currentSessionId.Equals(sessionId))
+                {
+                    string buddyName = routeTable.GetNameByIDInRouterTable(receivedPacket.sourceId);
+                    if (!transportLayer.dataPacketTimer.dataPacketId.Equals("NA"))
+                    {
+                        transportLayer.dataPacketTimer.ReleaseTimer();
+                    }
+                    MessageBox.Show(buddyName + " has terminated the chat",
+                    "Terminate", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
+                    MessageBoxDefaultButton.Button1);
+
+                    this.ResetAll();
+                }
+            }
+
+            else if (receivedPacket.packetType.Equals(PacketConstants.REJECT_START_CHAT_PACKET))
+            {
                 string buddyName = routeTable.GetNameByIDInRouterTable
-                                                    (receivedPacket.sourceId);
+                                                   (receivedPacket.sourceId);
+                MessageBox.Show(buddyName + " Rejected the Chat Offer",
+                "Terminate", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
+                MessageBoxDefaultButton.Button1);
                 if (!transportLayer.dataPacketTimer.dataPacketId.Equals("NA"))
                 {
                     transportLayer.dataPacketTimer.ReleaseTimer();
                 }
-                MessageBox.Show(buddyName + " has terminated the chat",
-                "Terminate", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
-                MessageBoxDefaultButton.Button1);
-
                 this.ResetAll();
             }
-        }
+        }       
     }
 }

@@ -540,10 +540,9 @@ namespace SmartDeviceApplication
                 {
                     Packet storedPacket = FindStoredPacketInSenderBuffer(dataPacketId);
                     storedPacket.packetType = PacketConstants.ROUTE_ERROR_PACKET;
-                    storedPacket.payloadMessage = PacketConstants.TIMER_EXPIRED;
+                    storedPacket.payloadMessage = PacketConstants.LINK_BREAK;
                     string XmlPacketString = storedPacket.CreateMessageXmlstringFromPacket();
                     transportLayerInstance.HandleReceivePacket(XmlPacketString);
-                    ReleaseTimer();
                 }
             }
 
@@ -808,11 +807,9 @@ namespace SmartDeviceApplication
             else if (receivedPacketType.Equals(PacketConstants.ROUTE_ERROR_PACKET))
             {
                 if (receivedPacket.sourceId.Equals(node.id))
-                {
-                    dataPacketTimer.dataPacketId = receivedPacketId;
-                    Packet storedPacket = dataPacketTimer.FindStoredPacketInSenderBuffer(receivedPacketId);
+                {     
                     presentationLayer = PresentationLayer.presentationLayerInstance;
-                    MessageBox.Show(receivedPacket.payloadMessage, "Terminate", MessageBoxButtons.OK,
+                    MessageBox.Show(PacketConstants.LINK_BREAK, "Terminate", MessageBoxButtons.OK,
                                     MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1);
                     presentationLayer.ResetAll();
                     routeTable.DeleteRouteEntryForNode(receivedPacket.destinationId);
@@ -821,10 +818,10 @@ namespace SmartDeviceApplication
                 else
                 {
                     routeTable.DeleteRouteEntryForNode(receivedPacket.destinationId);
-                    if (!routeTable.IsDestinationPathEmpty(receivedPacket.destinationId))
+                    if (!routeTable.IsDestinationPathEmpty(receivedPacket.sourceId))
                     {
                         Hashtable DestinationInfoList = routeTable.GetDestinationInfoFromRouteTable
-                                                                (receivedPacket.destinationId);
+                                                                (receivedPacket.sourceId);
                         string destinationIpAddress = routeTable.GetIPAddressByIDInRouterTable
                                                      (DestinationInfoList["NextHop"].ToString());
                         ForwardToNextNeighbour(receivedPacket, destinationIpAddress);
@@ -863,9 +860,15 @@ namespace SmartDeviceApplication
             else //All other Packets
             {
 
-                presentationLayer = PresentationLayer.presentationLayerInstance;
-                presentationLayer.HandleReceivedDataPackets(receivedPacket);
-
+                if (!receivedPacket.destinationId.Equals(node.id))
+                {
+                    ForwardToDestination(receivedPacket);
+                }
+                else
+                {
+                    presentationLayer = PresentationLayer.presentationLayerInstance;
+                    presentationLayer.HandleReceivedDataPackets(receivedPacket);
+                }
                 //TODO  RELEASE DATA TIMERS
             }
 
@@ -958,6 +961,27 @@ namespace SmartDeviceApplication
                 MessageBox.Show("SendBroadCastPacket: An Exception has occured." + ex.ToString());
             }
 
+        }
+
+        public void ForwardToDestination(Packet receivedPacket)
+        {
+
+            if (!routeTable.IsDestinationPathEmpty(receivedPacket.destinationId))
+            {
+                Hashtable DestinationInfoList = routeTable.GetDestinationInfoFromRouteTable
+                                                        (receivedPacket.destinationId);
+                string destinationIpAddress = routeTable.GetIPAddressByIDInRouterTable
+                                             (DestinationInfoList["NextHop"].ToString());
+                ForwardToNextNeighbour(receivedPacket, destinationIpAddress);
+
+            }
+            else
+            {
+                receivedPacket.payloadMessage = "LINK BREAK";
+                receivedPacket.packetType = PacketConstants.ROUTE_ERROR_PACKET;
+                string forwardIpAddress = routeTable.GetIPAddressByIDInRouterTable(receivedPacket.currentId);
+                ForwardToNextNeighbour(receivedPacket, forwardIpAddress);
+            }
         }
     }
 }
