@@ -101,6 +101,7 @@ namespace SmartDeviceApplication
                 {
                     dataPacket = packetBuilder.setPacketType(PacketConstants.START_CHAT_PACKET)
                               .build();
+                    sessionId = node.id + buddyId;
                     chatInitiate = true;
                 }
                 else
@@ -154,6 +155,7 @@ namespace SmartDeviceApplication
                 string acceptChat = "No";
                 SetBroadCastId();
                 PacketBuilder packetBuilder = new PacketBuilder();
+
                 packetBuilder = packetBuilder.setBroadcastId(broadcastId)
                               .setCurrentId(node.id)
                               .setSourceId(receivedPacket.destinationId)
@@ -172,7 +174,7 @@ namespace SmartDeviceApplication
                         buddyId = receivedPacket.sourceId;
                         sessionId = node.id + buddyId;
                         hasReceivedAck = true;
-
+                        transportLayer.dataPacketTimer.ReleaseTimer();
                         Packet acceptChatPacket = packetBuilder.setPacketType(PacketConstants.ACCEPT_START_CHAT_PACKET)
                                                   .build();
                         transportLayer.SendPacket(acceptChatPacket);
@@ -180,6 +182,7 @@ namespace SmartDeviceApplication
 
                     }
                 }
+              
                 if (acceptChat.Equals("No"))
                 {
                     Packet rejectChatPacket = packetBuilder.setPacketType(PacketConstants.REJECT_START_CHAT_PACKET)
@@ -259,16 +262,24 @@ namespace SmartDeviceApplication
 
             else if (receivedPacket.packetType.Equals(PacketConstants.REJECT_START_CHAT_PACKET))
             {
-                string buddyName = routeTable.GetNameByIDInRouterTable
-                                                   (receivedPacket.sourceId);
-                MessageBox.Show(buddyName + " Rejected the Chat Offer",
-                "Terminate", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
-                MessageBoxDefaultButton.Button1);
-                if (!transportLayer.dataPacketTimer.dataPacketId.Equals("NA"))
-                {
-                    transportLayer.dataPacketTimer.ReleaseTimer();
-                }
-                this.ResetAll();
+
+                 string currentSessionId = node.id + receivedPacket.sourceId;
+
+                 if (currentSessionId.Equals(sessionId))
+                 {
+
+                     string buddyName = routeTable.GetNameByIDInRouterTable
+                                                        (receivedPacket.sourceId);
+
+                     MessageBox.Show(buddyName + " Rejected the Chat Offer",
+                     "Terminate", MessageBoxButtons.OK, MessageBoxIcon.Exclamation,
+                     MessageBoxDefaultButton.Button1);
+                     if (!transportLayer.dataPacketTimer.dataPacketId.Equals("NA"))
+                     {
+                         transportLayer.dataPacketTimer.ReleaseTimer();
+                     }
+                     this.ResetAll();
+                 }
             }
         }       
     }

@@ -53,16 +53,14 @@ namespace SmartDeviceApplication
 
             }
 
-            public virtual void SetTimer()
-            {
+            public virtual void SetTimer() { }
 
-            }
+            public virtual void SetTimer(string packetId) { }
 
-            public virtual void ReleaseTimer()
-            {
-                enabledTimer = false;
-                SetTimer_Click.Abort();
-            }
+            public virtual void ReleaseTimer(string packetID) { }
+
+            public virtual void ReleaseTimer(){}
+
         }
 
         public class RouteTimer : Timer
@@ -95,7 +93,7 @@ namespace SmartDeviceApplication
 
             public override void ReleaseTimer()
             {
-                base.ReleaseTimer();
+                SetTimer_Click.Abort();
             }
 
             public void RouteTimerClick()
@@ -140,49 +138,62 @@ namespace SmartDeviceApplication
 
         public class ReversePathTimer : Timer
         {
-            public int deltaIncrement;
-            public int keyReversePath;
-            public object reversePathTableLock;
+            private string reversePathId;
+            private object reversePathTableLock;
             private Dictionary<int, string> reversePathTable;
+            private Dictionary<int, Thread> reversePathThreadWindow;
 
             public ReversePathTimer(int count)
                 : base(count)
             {
-                keyReversePath = PacketConstants.EmptyInt;
                 reversePathTableLock = new object();
                 reversePathTable = new Dictionary<int, string>();
-                SetTimer_Click = new Thread(new ThreadStart(ReversePathTimerClick));
+                reversePathThreadWindow = new Dictionary<int, Thread>();
             }
 
-            public override void SetTimer()
+            public override void SetTimer(string packetId)
             {
-                if (enabledTimer == true)
-                    return;
-                SetTimer_Click = new Thread(new ThreadStart(ReversePathTimerClick));
-                SetTimer_Click.Start();
+                reversePathId = packetId;
+                Thread SetTimer = new Thread(new ThreadStart(ReversePathTimerClick));
+                reversePathThreadWindow.Add(Convert.ToInt32(packetId), SetTimer);
+                SetTimer.Start();
             }
 
             public void ReversePathTimerClick()
             {
-                deltaIncrement = 0;
-                enabledTimer = true;
 
-                while (enabledTimer && deltaIncrement <= countTimer)
+                int deltaIncrement = 0;
+                string packetId = reversePathId;
+                while (deltaIncrement <= countTimer)
                 {
                     Thread.Sleep(countTimer);
                     deltaIncrement += countTimer;
                 }
-
                 if (deltaIncrement > countTimer)
                 {
-                    ReleaseTimer();
+                    ReleaseTimer(packetId);
                 }
             }
 
-            public override void ReleaseTimer()
+            public override void ReleaseTimer(string packetId)
             {
-                UpdateReversePathTable(keyReversePath);
-                base.ReleaseTimer();
+                UpdateReversePathTable(Convert.ToInt32( packetId));
+                UpdateReversePathThreadWindow(packetId);
+            }
+
+            public void UpdateReversePathThreadWindow(string keyReversePath)
+            {
+                IDictionaryEnumerator ide = reversePathThreadWindow.GetEnumerator();
+                while (ide.MoveNext())
+                {
+                    if (ide.Key.ToString().Equals(keyReversePath))
+                    {
+                        Thread storedThread = (Thread)ide.Value;
+                        reversePathThreadWindow.Remove(Convert.ToInt32(keyReversePath));
+                        storedThread.Abort();
+                        break;
+                    }
+                }
             }
 
             public void UpdateReversePathTable(int keyReversePath)
@@ -213,7 +224,7 @@ namespace SmartDeviceApplication
                         IDictionaryEnumerator ide = reversePathTable.GetEnumerator();
                         while (ide.MoveNext())
                         {
-                            if (ide.Key.ToString().Equals(keyReversePath))
+                            if (ide.Key.ToString().Equals(keyReversePath.ToString()))
                                 neigbourId = (string)ide.Value;
 
                         }
@@ -263,46 +274,61 @@ namespace SmartDeviceApplication
 
         public class RouteRequestTimer : Timer
         {
-            public int deltaIncrement;
-            public string packetId;
-            public object routeRequestWindowLock;
-            public Dictionary<string, Packet> receivedRouteRequestWindow;
+            private string routeRequestPacketId;
+            private object routeRequestWindowLock;
+            private Dictionary<string, Packet> receivedRouteRequestWindow;
+            private Dictionary<string, Thread> routeRequestThreadWindow;
 
             public RouteRequestTimer(int count)
                 : base(count)
             {
-                packetId = "NA";
                 routeRequestWindowLock = new object();
                 receivedRouteRequestWindow = new Dictionary<string, Packet>();
-                SetTimer_Click = new Thread(new ThreadStart(RouteRequestTimerClick));
+                routeRequestThreadWindow = new Dictionary<string, Thread>();
             }
 
-            public override void SetTimer()
+            public override void SetTimer(string packetId)
             {
-                SetTimer_Click = new Thread(new ThreadStart(RouteRequestTimerClick));
-                SetTimer_Click.Start();
+                routeRequestPacketId = packetId;
+                Thread SetTimer = new Thread(new ThreadStart(RouteRequestTimerClick));
+                routeRequestThreadWindow.Add(packetId, SetTimer);
+                SetTimer.Start();
             }
 
             public void RouteRequestTimerClick()
             {
-                deltaIncrement = 0;
-                enabledTimer = true;
-
-                while (enabledTimer && deltaIncrement <= countTimer)
+                string packetId = routeRequestPacketId;
+                int deltaIncrement = 0;
+                while (deltaIncrement <= countTimer)
                 {
                     Thread.Sleep(countTimer);
                     deltaIncrement += countTimer;
                 }
                 if (deltaIncrement > countTimer)
                 {
-                    ReleaseTimer();
+                    ReleaseTimer(packetId);
                 }
             }
 
-            public override void ReleaseTimer()
+            public override void ReleaseTimer(string packetId)
             {
                 UpdateRouteRequestBuffer(packetId);
-                base.ReleaseTimer();
+                UpdateRouteRequestThreadWindow(packetId);
+            }
+
+            public void UpdateRouteRequestThreadWindow(string packetId)
+            {
+                IDictionaryEnumerator ide = routeRequestThreadWindow.GetEnumerator();
+                while (ide.MoveNext())
+                {
+                    if (ide.Key.ToString().Equals(packetId))
+                    {
+                        Thread storedThread = (Thread)ide.Value;
+                        routeRequestThreadWindow.Remove(packetId);
+                        storedThread.Abort();
+                        break;
+                    }
+                }
             }
 
             public void UpdateRouteRequestBuffer(string packetId)
@@ -338,7 +364,6 @@ namespace SmartDeviceApplication
                                 packet = (Packet)ide.Value;
 
                         }
-
                     }
                 }
                 catch (Exception e)
@@ -385,46 +410,62 @@ namespace SmartDeviceApplication
 
         public class RouteReplyTimer : Timer
         {
-            public int deltaIncrement;
-            public string packetId;
-            public object routeReplyWindowLock;
-            public Dictionary<string, Packet> receivedRouteReplyWindow;
+            private string routereplyId;
+            private object routeReplyWindowLock;
+            private Dictionary<string, Packet> receivedRouteReplyWindow;
+            private Dictionary<string, Thread> routeReplyThreadWindow;
 
+      
             public RouteReplyTimer(int count)
                 : base(count)
             {
-                packetId = "NA";
                 routeReplyWindowLock = new object();
                 receivedRouteReplyWindow = new Dictionary<string, Packet>();
-                SetTimer_Click = new Thread(new ThreadStart(RouteReplyTimerClick));
+                routeReplyThreadWindow = new Dictionary<string, Thread>();
             }
 
-            public override void SetTimer()
+            public override void SetTimer(string packetId)
             {
-                SetTimer_Click = new Thread(new ThreadStart(RouteReplyTimerClick));
-                SetTimer_Click.Start();
+                routereplyId = packetId;
+                Thread SetTimer = new Thread(new ThreadStart(RouteReplyTimerClick));
+                routeReplyThreadWindow.Add(packetId, SetTimer);
+                SetTimer.Start();
             }
 
             public void RouteReplyTimerClick()
             {
-                deltaIncrement = 0;
-                enabledTimer = true;
-
-                while (enabledTimer && deltaIncrement <= countTimer)
+                string packetId = routereplyId;
+                int deltaIncrement = 0;
+                while (deltaIncrement <= countTimer)
                 {
                     Thread.Sleep(countTimer);
                     deltaIncrement += countTimer;
                 }
                 if (deltaIncrement > countTimer)
                 {
-                    ReleaseTimer();
+                    ReleaseTimer(packetId);
                 }
             }
 
-            public override void ReleaseTimer()
+            public override void ReleaseTimer(string packetId)
             {
                 UpdateRouteReplyBuffer(packetId);
-                base.ReleaseTimer();
+                UpdateRouteReplyThreadWindow(packetId);
+            }
+
+            public void UpdateRouteReplyThreadWindow(string packetId)
+            {
+                IDictionaryEnumerator ide = routeReplyThreadWindow.GetEnumerator();
+                while (ide.MoveNext())
+                {
+                    if (ide.Key.ToString().Equals(packetId))
+                    {
+                        Thread storedThread = (Thread)ide.Value;
+                        routeReplyThreadWindow.Remove(packetId);
+                        storedThread.Abort();
+                        break;
+                    }
+                }
             }
 
             public void SaveInReceivedRouteReplyBuffer(string routeReplyPacketId, Packet routeReplyPacket)
@@ -554,7 +595,12 @@ namespace SmartDeviceApplication
                     dataPacketId = "NA";
                     senderBufferWindow.Clear();
                 }
-                base.ReleaseTimer();
+
+                if (enabledTimer == true)
+                {
+                    enabledTimer = false;
+                    SetTimer_Click.Abort();
+                }
             }
 
             public void SaveInSenderBuffer(Packet sentPacket)
@@ -680,10 +726,6 @@ namespace SmartDeviceApplication
                         {
                             receivedPacket.hopCount++;
                             receivedPacket.currentId = node.id;
-
-                            //SET ROUTE REQUEST TIMER
-                            routeRequestTimer.SetTimer();
-                            routeRequestTimer.SaveInReceivedRouteRequestBuffer(receivedPacketId, receivedPacket);
                             SendBroadCastPacket(receivedPacket);
                         }
                     }
@@ -692,22 +734,16 @@ namespace SmartDeviceApplication
                         //ReBroadCast
                         receivedPacket.hopCount++;
                         receivedPacket.currentId = node.id;
-
-                        //SET ROUTE REQUEST TIMER
-                        routeRequestTimer.SetTimer();
-                        routeRequestTimer.SaveInReceivedRouteRequestBuffer(receivedPacketId, receivedPacket);
                         SendBroadCastPacket(receivedPacket);
                     }
 
 
                     //RELEASE PREVIOUS REVERSE PATH TIMER
-                    reversePathTimer.keyReversePath = receivedPacket.sourceSeqNum;
-                    reversePathTimer.ReleaseTimer();
+                    reversePathTimer.ReleaseTimer(receivedPacket.sourceSeqNum.ToString());
 
                     //SET REVERSE PATH TIMER
-                    reversePathTimer.SetTimer();
                     reversePathTimer.SaveInReversePathTable(receivedPacket.sourceSeqNum, receivedPacket.currentId);
-
+                    reversePathTimer.SetTimer(receivedPacket.sourceSeqNum.ToString());
                 }
                 else //Already Received Request
                 {
@@ -715,20 +751,18 @@ namespace SmartDeviceApplication
                     if (storedRouteRequestPacket.hopCount > receivedPacket.hopCount)
                     {
                         //RELEASE PREVIOUS ROUTE REQUEST TIMER
-                        routeRequestTimer.packetId = receivedPacketId;
-                        routeRequestTimer.ReleaseTimer();
+                        routeRequestTimer.ReleaseTimer(receivedPacketId);
 
                         //SET NEW ROUTE REQUEST TIMER
                         routeRequestTimer.SaveInReceivedRouteRequestBuffer(receivedPacketId, receivedPacket);
-                        routeRequestTimer.SetTimer();
+                        routeRequestTimer.SetTimer(receivedPacketId);
 
                         //RELEASE PREVIOUS REVERSE PATH TIMER
-                        reversePathTimer.keyReversePath = receivedPacket.sourceSeqNum;
-                        reversePathTimer.ReleaseTimer();
+                        reversePathTimer.ReleaseTimer(receivedPacket.sourceSeqNum.ToString());
 
                         // SET NEW REVERSE PATH TIMERS
                         reversePathTimer.SaveInReversePathTable(receivedPacket.sourceSeqNum, receivedPacket.currentId);
-                        reversePathTimer.SetTimer();
+                        reversePathTimer.SetTimer(receivedPacket.sourceSeqNum.ToString());
                     }
                 }
             }
@@ -753,12 +787,11 @@ namespace SmartDeviceApplication
                             ForwardToNextNeighbour(storedSentPacket, forwardIpAddress);
 
                             //RELEASE ROUTE REQUEST
-                            routeRequestTimer.packetId = receivedPacketId;
-                            routeRequestTimer.ReleaseTimer();
+                            routeRequestTimer.ReleaseTimer(receivedPacketId);
 
                             //SET ROUTE REPLY TIMER
                             routeReplyTimer.SaveInReceivedRouteReplyBuffer(receivedPacketId, receivedPacket);
-                            routeRequestTimer.SetTimer();
+                            routeReplyTimer.SetTimer(receivedPacketId);
                         }
                         else
                         {
@@ -773,16 +806,14 @@ namespace SmartDeviceApplication
                                 routeReplyTimer.SaveInReceivedRouteReplyBuffer(receivedPacketId, receivedPacket);
 
                                 //RELEASE ROUTE REQUEST TIMER
-                                routeRequestTimer.packetId = receivedPacketId;
-                                routeRequestTimer.ReleaseTimer();
+                                routeRequestTimer.ReleaseTimer(receivedPacketId);
 
                                 //RELEASE REVERSE PATH TIMER
-                                reversePathTimer.keyReversePath = keyReversePath; ;
-                                reversePathTimer.ReleaseTimer();
+                                reversePathTimer.ReleaseTimer(keyReversePath.ToString());
 
                                 //SET ROUTE REPLY TIMER
                                 routeReplyTimer.SaveInReceivedRouteReplyBuffer(receivedPacketId, receivedPacket);
-                                routeReplyTimer.SetTimer();
+                                routeReplyTimer.SetTimer(receivedPacketId);
                             }
                         }
                     }
@@ -793,12 +824,11 @@ namespace SmartDeviceApplication
                     if (storedRouteReplyPacket.hopCount > receivedPacket.hopCount)
                     {
                         //RELEASE PERVIOUS ROUTE REPLY TIMER
-                        routeReplyTimer.packetId = receivedPacketId;
-                        routeReplyTimer.ReleaseTimer();
+                        routeReplyTimer.ReleaseTimer(receivedPacketId);
 
                         //SET NEW ROUTE REPLY TIMER
                         routeReplyTimer.SaveInReceivedRouteReplyBuffer(receivedPacketId, receivedPacket);
-                        routeReplyTimer.SetTimer();
+                        routeReplyTimer.SetTimer(receivedPacketId);
                     }
                 }
             }
@@ -930,7 +960,7 @@ namespace SmartDeviceApplication
 
 
                     SendBroadCastPacket(routeRequestPacket);
-                    // TODO     SET ROUTE REQUEST TIMER
+                 
                 }
             }
 
@@ -944,6 +974,15 @@ namespace SmartDeviceApplication
         {
             try
             {
+                string packetId = forwardPacket.sourceId + forwardPacket.broadcastId.ToString();
+
+                //RELEAST PREVIOUS ROUTE REQUEST TIMER
+                routeRequestTimer.ReleaseTimer(packetId);
+
+                //SET ROUTE REQUEST TIMER
+                routeRequestTimer.SaveInReceivedRouteRequestBuffer(packetId,forwardPacket);
+                routeRequestTimer.SetTimer(packetId);
+            
                 ArrayList neighbourNodesList = routeTable.GetNeighbourNodes(node.id);
                 string XmlMessageStream = forwardPacket.CreateMessageXmlstringFromPacket();
 
