@@ -6,10 +6,10 @@ namespace SmartDeviceApplication
 {
     class TimerConstants
     {
-        public const int DATA_TIMER = 15000;
-        public const int ROUTE_TIMER = 20000;
-        public const int REVERSE_PATH_TIMER = 3000;
-        public const int ROUTE_REQUEST_TIMER = 5000;
-        public const int ROUTE_REPLY_TIMER = 3000;
+        public const int DATA_TIMER = 11000;
+        public const int ROUTE_TIMER = 5000;
+        public const int REVERSE_PATH_TIMER = 2000;
+        public const int ROUTE_REQUEST_TIMER = 2000;
+        public const int ROUTE_REPLY_TIMER = 1000;
     }
 }

@@ -22,12 +22,14 @@ namespace SmartDeviceApplication
     public class RouterTableClass
     {
         public  XmlDocument routeTableXml;
+        private Semaphore routeTableSynchronize;
         private static volatile RouterTableClass instance;
         private static object syncRoot = new Object();
 
         public RouterTableClass()
         {
             routeTableXml = XmlFileUtility.FindXmlDoc(XmlFileUtility.RouteFile);
+            routeTableSynchronize=new Semaphore(1,1);
         }
 
         public static RouterTableClass routeTableInstance
@@ -52,8 +54,7 @@ namespace SmartDeviceApplication
 
             try
             {
-                Monitor.Enter(routeTableXml);
-
+                LockRouteTable();
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
 
@@ -71,7 +72,7 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();
             }
 
             catch (Exception ex)
@@ -87,7 +88,7 @@ namespace SmartDeviceApplication
 
             try
             {
-                Monitor.Enter(routeTableXml);
+                LockRouteTable();
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -106,7 +107,7 @@ namespace SmartDeviceApplication
                     }
                 }
 
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();
             }
 
             catch (Exception ex)
@@ -122,7 +123,7 @@ namespace SmartDeviceApplication
 
             try
             {
-                Monitor.Enter(routeTableXml);
+                LockRouteTable();
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -137,7 +138,7 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();
             }
 
             catch (Exception ex)
@@ -152,7 +153,7 @@ namespace SmartDeviceApplication
             string nodeIpAddress = "NA";
             try
             {
-                Monitor.Enter(routeTableXml);
+                LockRouteTable();
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -166,7 +167,7 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();
             }
             catch (Exception ex)
             {
@@ -180,7 +181,7 @@ namespace SmartDeviceApplication
             string nodeIpAddress = "NA";
             try
             {
-                Monitor.Enter(routeTableXml);
+                LockRouteTable();
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -194,7 +195,7 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();
             }
             catch (Exception ex)
             {
@@ -212,7 +213,7 @@ namespace SmartDeviceApplication
         {
             try
             {
-                Monitor.Enter(routeTableXml);
+                LockRouteTable();
 
                 XmlNode rootXmlNode = routeTableXml.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -263,7 +264,7 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                Monitor.Exit(routeTableXml);
+                ReleaseRouteTable();    
             }
             catch (Exception ex)
             {
@@ -273,7 +274,7 @@ namespace SmartDeviceApplication
 
         public void DeleteRouteEntryForNode(string nodeId)
         {
-            Monitor.Enter(routeTableXml);
+            LockRouteTable();
 
             XmlNode rootXmlNode = routeTableXml.DocumentElement;
             XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
@@ -290,7 +291,19 @@ namespace SmartDeviceApplication
                     currentElement.SelectSingleNode("LifeTime").InnerText = PacketConstants.EmptyInt.ToString();
                 }
             }
-            Monitor.Exit(routeTableXml);
+            ReleaseRouteTable();
         }
+
+
+        public void LockRouteTable()
+        {
+            routeTableSynchronize.WaitOne();
+        }
+
+        public void ReleaseRouteTable()
+        {
+            routeTableSynchronize.Release();
+        }
+
     }
 }
