@@ -47,7 +47,7 @@ namespace SmartDeviceApplication
             }
         }
 
-        public Node()
+        private Node()
         {
             InitializeNode();
         }
@@ -55,22 +55,16 @@ namespace SmartDeviceApplication
         public void InitializeNode()
         {
             confXmlDoc = XmlFileUtility.FindXmlDoc(XmlFileUtility.ConfFile);
-      
+
             try
             {
                 XmlNode rootNode = confXmlDoc.DocumentElement;
-                XmlNodeList childXmlNodes = rootNode.ChildNodes;
+                XmlElement currentElement = (XmlElement)rootNode.FirstChild;
 
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-
-                    id = currentElement.GetAttribute("ID");
-                    name = currentElement.GetAttribute("NAME");
-                    powerRange = Convert.ToInt32(currentElement.GetAttribute("PowerRange"));
-                    sequenceNumber = Convert.ToInt32(currentElement.GetAttribute("SequenceNumber"));
-                }
-
+                id = currentElement.GetAttribute("ID");
+                name = currentElement.GetAttribute("NAME");
+                powerRange = Convert.ToInt32(currentElement.GetAttribute("PowerRange"));
+                sequenceNumber = Convert.ToInt32(currentElement.GetAttribute("SequenceNumber"));
             }
             catch (Exception ex)
             {

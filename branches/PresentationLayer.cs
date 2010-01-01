@@ -103,6 +103,7 @@ namespace SmartDeviceApplication
                               .build();
                     sessionId = node.id + buddyId;
                     chatInitiate = true;
+                    transportLayer.SendPacket(dataPacket);
                 }
                 else
                 {
@@ -120,6 +121,7 @@ namespace SmartDeviceApplication
 
                 transportLayer.dataPacketTimer.ReleaseTimer();
                 this.ResetAll();
+                transportLayer.SendPacket(dataPacket);
             }
 
             if (optionSelected.Equals("SEND"))
@@ -134,9 +136,8 @@ namespace SmartDeviceApplication
                 objectItems[2] = messageForm.MessageTextBox.Text;
 
                 messageForm.Invoke(messageForm.updateChatWindowDelegate, new object[] { objectItems });
+                transportLayer.SendPacket(dataPacket);
             }
-
-            transportLayer.SendPacket(dataPacket);
         }
 
         public void HandleReceivedDataPackets(Packet receivedPacket)
@@ -174,7 +175,7 @@ namespace SmartDeviceApplication
                         buddyId = receivedPacket.sourceId;
                         sessionId = node.id + buddyId;
                         hasReceivedAck = true;
-                        transportLayer.dataPacketTimer.ReleaseTimer();
+                        chatInitiate = true;
                         Packet acceptChatPacket = packetBuilder.setPacketType(PacketConstants.ACCEPT_START_CHAT_PACKET)
                                                   .build();
                         transportLayer.SendPacket(acceptChatPacket);

@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using System.Collections;
 using System.Xml;
 using System.IO;
+using OpenNETCF.Threading;
 
 namespace SmartDeviceApplication
 {
@@ -26,10 +27,10 @@ namespace SmartDeviceApplication
         private static volatile RouterTableClass instance;
         private static object syncRoot = new Object();
 
-        public RouterTableClass()
+        private RouterTableClass()
         {
             routeTableXml = XmlFileUtility.FindXmlDoc(XmlFileUtility.RouteFile);
-            routeTableSynchronize=new Semaphore(1,1);
+            routeTableSynchronize = new Semaphore(1, 1);
         }
 
         public static RouterTableClass routeTableInstance
@@ -50,8 +51,6 @@ namespace SmartDeviceApplication
 
         public bool IsDestinationPathEmpty(string nodeId)
         {
-            bool flag = false;
-
             try
             {
                 LockRouteTable();
@@ -66,9 +65,9 @@ namespace SmartDeviceApplication
 
                         if (currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
                         {
-                            flag = true;
+                            ReleaseRouteTable();
+                            return true;
                         }
-                        break;
                     }
 
                 }
@@ -79,7 +78,7 @@ namespace SmartDeviceApplication
             {
                 MessageBox.Show("IsDestinationPathEmpty: An Exception has occured." + ex.ToString());
             }
-            return flag;
+            return false;
         }
 
         public Hashtable GetDestinationInfoFromRouteTable(string nodeId)
@@ -150,7 +149,6 @@ namespace SmartDeviceApplication
 
         public string GetIPAddressByIDInRouterTable(string nodeId)
         {
-            string nodeIpAddress = "NA";
             try
             {
                 LockRouteTable();
@@ -163,7 +161,8 @@ namespace SmartDeviceApplication
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                     {
-                        nodeIpAddress = currentElement.GetAttribute("IpAddress");
+                        ReleaseRouteTable();
+                        return currentElement.GetAttribute("IpAddress");
                     }
 
                 }
@@ -173,7 +172,7 @@ namespace SmartDeviceApplication
             {
                 MessageBox.Show("GetIPAddressByID: An Exception has occured." + ex.ToString());
             }
-            return nodeIpAddress;
+            return "NA";
         }
 
         public string GetNameByIDInRouterTable(string nodeId)
@@ -293,7 +292,6 @@ namespace SmartDeviceApplication
             }
             ReleaseRouteTable();
         }
-
 
         public void LockRouteTable()
         {
