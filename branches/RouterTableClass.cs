@@ -11,7 +11,7 @@ using System.Windows.Forms;
 using System.Collections;
 using System.Xml;
 using System.IO;
-using OpenNETCF.Threading;
+
 
 namespace SmartDeviceApplication
 {
@@ -31,6 +31,12 @@ namespace SmartDeviceApplication
         {
             routeTableXml = XmlFileUtility.FindXmlDoc(XmlFileUtility.RouteFile);
             routeTableSynchronize = new Semaphore(1, 1);
+        }
+
+        public XmlNodeList GetNodesInRouteXmlFile()
+        {
+            XmlNode rootXmlNode = routeTableXml.DocumentElement;
+            return rootXmlNode.ChildNodes;
         }
 
         public static RouterTableClass routeTableInstance
@@ -54,8 +60,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -88,9 +93,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -123,9 +126,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -152,9 +153,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -181,9 +180,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -213,9 +210,7 @@ namespace SmartDeviceApplication
             try
             {
                 LockRouteTable();
-
-                XmlNode rootXmlNode = routeTableXml.DocumentElement;
-                XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
                 IDictionaryEnumerator ide = InitiatorInfoTable.GetEnumerator();
                 bool updateTable=false;
 
@@ -241,7 +236,14 @@ namespace SmartDeviceApplication
                             updateTable = true;
 
                         if (storedHopCount > receivedHopCount)
+                        {
                             updateTable = true;
+                        }
+                        else
+                        {
+                            if (updateTable == true)
+                                updateTable = false;
+                        }
 
                         if (updateTable)
                         {
@@ -274,10 +276,7 @@ namespace SmartDeviceApplication
         public void DeleteRouteEntryForNode(string nodeId)
         {
             LockRouteTable();
-
-            XmlNode rootXmlNode = routeTableXml.DocumentElement;
-            XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
-
+            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
             foreach (XmlNode childNode in childXmlNodes)
             {

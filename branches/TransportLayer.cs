@@ -8,11 +8,10 @@ using System.Data;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenNETCF.Threading;
+
 
 namespace SmartDeviceApplication
 {
-
     /// <summary>
     /// Transport Layer which support Routing
     /// Protocol to be followed to send and
@@ -27,18 +26,48 @@ namespace SmartDeviceApplication
         private PresentationLayer presentationLayer;
         private string receivedHelloMessageStatus;
         public RouteTimer routeTimer;
-        public RouteReplyTimer routeReplyTimer;
-        public RouteRequestTimer routeRequestTimer;
-        public ReversePathTimer reversePathTimer;
+        private RouteReplyTimer routeReplyTimer;
+        private RouteRequestTimer routeRequestTimer;
+        private ReversePathTimer reversePathTimer;
         public DataPacketTimer dataPacketTimer;
         private static volatile TransportLayer instance;
         private static object syncRoot = new Object();
 
+        public static TransportLayer transportLayerInstance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new TransportLayer();
+                    }
+                }
+                return instance;
+            }
+        }
+
+        private TransportLayer()
+        {
+
+            node = Node.nodeInstance;
+            routeRequestTimer = new RouteRequestTimer(TimerConstants.ROUTE_REQUEST_TIMER);
+            routeReplyTimer = new RouteReplyTimer(TimerConstants.ROUTE_REPLY_TIMER);
+            dataPacketTimer = new DataPacketTimer(TimerConstants.DATA_TIMER);
+            reversePathTimer = new ReversePathTimer(TimerConstants.REVERSE_PATH_TIMER);
+            routeTable = RouterTableClass.routeTableInstance;
+            networkLayer = NetworkLayer.networkLayerInstance;
+
+
+        }
+
         /*Timers*/
-        public class Timer
+        public abstract class Timer
         {
             protected int countTimer;
-            protected Thread SetTimer_Click;
+            protected Thread SetTimerClick;
             protected volatile bool enabledTimer;
             protected Node node;
             protected NetworkLayer networkLayer;
@@ -71,30 +100,28 @@ namespace SmartDeviceApplication
             private Packet helloMessage;
             private PacketBuilder packetBuilder;
 
-            public RouteTimer(int count)
-                : base(count)
+            public RouteTimer(int count): base(count)
             {
                 packetBuilder = new PacketBuilder();
                 Random rand = new Random();
                 broadcastId = rand.Next(1, 100000);
-                SetTimer_Click = new Thread(new ThreadStart(RouteTimerClick));
+                SetTimerClick = new Thread(new ThreadStart(RouteTimerClick));
             }
 
             public override void SetTimer()
             {
                 enabledTimer = true;
-                packetBuilder = new PacketBuilder();
                 packetBuilder = packetBuilder.setPacketType(PacketConstants.HELLO_MESSAGE)
                                 .setCurrentId(node.id)
                                 .setSourceSeqNum(node.sequenceNumber)
                                 .setSourceId(node.id);
-                SetTimer_Click = new Thread(new ThreadStart(RouteTimerClick));
-                SetTimer_Click.Start();
+                SetTimerClick = new Thread(new ThreadStart(RouteTimerClick));
+                SetTimerClick.Start();
             }
 
             public override void ReleaseTimer()
             {
-                SetTimer_Click.Abort();
+                SetTimerClick.Abort();
             }
 
             public void RouteTimerClick()
@@ -104,10 +131,10 @@ namespace SmartDeviceApplication
                 string XmlMessageStream;
                 string neighbourIpAddress;
                 ArrayList neighbourNodesList;
+                Thread.Sleep(2*countTimer);
 
                 while (enabledTimer)
-                {
-                    Thread.Sleep(countTimer);
+                {      
                     neighbourNodesList = routeTable.GetNeighbourNodes(node.id);
                     foreach (string nodeId in neighbourNodesList)
                     {
@@ -144,8 +171,7 @@ namespace SmartDeviceApplication
             private Dictionary<int, string> reversePathTable;
             private Dictionary<int, Thread> reversePathThreadWindow;
 
-            public ReversePathTimer(int count)
-                : base(count)
+            public ReversePathTimer(int count): base(count)
             {
                 reversePathTableLock = new object();
                 reversePathSemaphore = new Semaphore(1, 1);
@@ -304,8 +330,7 @@ namespace SmartDeviceApplication
             private Dictionary<string, Packet> receivedRouteRequestWindow;
             private Dictionary<string, Thread> routeRequestThreadWindow;
 
-            public RouteRequestTimer(int count)
-                : base(count)
+            public RouteRequestTimer(int count): base(count)
             {
                 routeRequestWindowLock = new object();
                 routeRequestSemaphore = new Semaphore(1, 1);
@@ -459,8 +484,7 @@ namespace SmartDeviceApplication
             private Dictionary<string, Thread> routeReplyThreadWindow;
 
 
-            public RouteReplyTimer(int count)
-                : base(count)
+            public RouteReplyTimer(int count): base(count)
             {
                 routeReplySemaphore = new Semaphore(1, 1);
                 routeReplyWindowLock = new object();
@@ -615,14 +639,13 @@ namespace SmartDeviceApplication
             private Semaphore senderWindowSemaphore;
             private Dictionary<string, Packet> senderBufferWindow;
 
-            public DataPacketTimer(int count)
-                : base(count)
+            public DataPacketTimer(int count): base(count)
             {
                 dataPacketId = "NA";
                 senderWindowSemaphore = new Semaphore(1, 1);
                 senderWindowLock = new object();
                 senderBufferWindow = new Dictionary<string, Packet>();
-                SetTimer_Click = new Thread(new ThreadStart(DataPacketTimerClick));
+                SetTimerClick = new Thread(new ThreadStart(DataPacketTimerClick));
             }
 
             public override void SetTimer()
@@ -630,8 +653,8 @@ namespace SmartDeviceApplication
                 WaitSenderBufferWindow();
                 if (senderBufferWindow.Count == 1)
                 {
-                    SetTimer_Click = new Thread(new ThreadStart(DataPacketTimerClick));
-                    SetTimer_Click.Start();
+                    SetTimerClick = new Thread(new ThreadStart(DataPacketTimerClick));
+                    SetTimerClick.Start();
                 }
                 SignalSenderBufferWindow();
             }
@@ -667,7 +690,7 @@ namespace SmartDeviceApplication
                 enabledTimer = false;
                 senderBufferWindow.Clear();
                 SignalSenderBufferWindow();
-                SetTimer_Click.Abort();
+                SetTimerClick.Abort();
             }
 
             public void SaveInSenderBuffer(Packet sentPacket)
@@ -705,36 +728,6 @@ namespace SmartDeviceApplication
             {
                 senderWindowSemaphore.Release();
             }
-        }
-
-        public static TransportLayer transportLayerInstance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    lock (syncRoot)
-                    {
-                        if (instance == null)
-                            instance = new TransportLayer();
-                    }
-                }
-                return instance;
-            }
-        }
-
-        private TransportLayer()
-        {
-
-            node = Node.nodeInstance;
-            routeRequestTimer = new RouteRequestTimer(TimerConstants.ROUTE_REQUEST_TIMER);
-            routeReplyTimer = new RouteReplyTimer(TimerConstants.ROUTE_REPLY_TIMER);
-            dataPacketTimer = new DataPacketTimer(TimerConstants.DATA_TIMER);
-            reversePathTimer = new ReversePathTimer(TimerConstants.REVERSE_PATH_TIMER);
-            routeTable = RouterTableClass.routeTableInstance;
-            networkLayer = NetworkLayer.networkLayerInstance;
-
-
         }
 
         public void AddItemsToHashTable(Hashtable InitiatorInfoTable, string currentId,
