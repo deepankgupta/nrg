@@ -1,7 +1,8 @@
 using System;
 using System.Net.Sockets;
 using System.Net;
-using System.Threading;
+using OpenNETCF;
+using OpenNETCF.Threading;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -20,26 +21,14 @@ namespace SmartDeviceApplication
     /// Neibour Nodes Information From Route Table stored
     /// in an XML File.
     /// </summary>
-    public class RouterTableClass
+    public class RouteTable
     {
-        public  XmlDocument routeTableXml;
-        private Semaphore routeTableSynchronize;
-        private static volatile RouterTableClass instance;
+        public  XmlDocument routeTableDocument;
+        public Semaphore routeTableSynchronize;
+        private static volatile RouteTable instance;
         private static object syncRoot = new Object();
 
-        private RouterTableClass()
-        {
-            routeTableXml = XmlFileUtility.FindXmlDoc(XmlFileUtility.RouteFile);
-            routeTableSynchronize = new Semaphore(1, 1);
-        }
-
-        public XmlNodeList GetNodesInRouteXmlFile()
-        {
-            XmlNode rootXmlNode = routeTableXml.DocumentElement;
-            return rootXmlNode.ChildNodes;
-        }
-
-        public static RouterTableClass routeTableInstance
+        public static RouteTable routeTableInstance
         {
             get
             {
@@ -48,13 +37,25 @@ namespace SmartDeviceApplication
                     lock (syncRoot)
                     {
                         if (instance == null)
-                            instance = new RouterTableClass();
+                            instance = new RouteTable();
                     }
                 }
                 return instance;
             }
         }
 
+        protected RouteTable()
+        {
+            routeTableDocument = XmlFileUtility.routeTableDocument;
+            routeTableSynchronize = new Semaphore(1, 1);
+        }
+
+        public XmlNodeList GetNodesInRouteXmlFile()
+        {
+            XmlNode rootXmlNode = routeTableDocument.DocumentElement;
+            return rootXmlNode.ChildNodes;
+        }
+        
         public bool IsDestinationPathEmpty(string nodeId)
         {
             try
@@ -67,18 +68,15 @@ namespace SmartDeviceApplication
                     XmlElement currentElement = (XmlElement)childNode;
                     if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                     {
-
                         if (currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
                         {
                             ReleaseRouteTable();
                             return true;
                         }
                     }
-
                 }
                 ReleaseRouteTable();
             }
-
             catch (Exception ex)
             {
                 MessageBox.Show("IsDestinationPathEmpty: An Exception has occured." + ex.ToString());
@@ -86,7 +84,149 @@ namespace SmartDeviceApplication
             return false;
         }
 
-        public Hashtable GetDestinationInfoFromRouteTable(string nodeId)
+        public virtual Hashtable GetDestinationInfoFromRouteTable(string nodeId) 
+        {
+            return new Hashtable();
+        }
+
+        public ArrayList GetNeighbourNodes(string nodeId)
+        {
+            ArrayList neighbourNodeList = new ArrayList();
+
+            try
+            {
+                LockRouteTable();
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+
+                foreach (XmlNode childNode in childXmlNodes)
+                {
+                    XmlElement currentElement = (XmlElement)childNode;
+
+                    if (childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.OneHop))
+                    {
+                        neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
+                    }
+                }
+                ReleaseRouteTable();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("GetNeighbourNodes : An Exception has occured." + ex.ToString());
+            }
+            return neighbourNodeList;
+        }
+
+        public string GetIPAddressByIDInRouterTable(string nodeId)
+        {
+            try
+            {
+                LockRouteTable();
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+
+                foreach (XmlNode childNode in childXmlNodes)
+                {
+                    XmlElement currentElement = (XmlElement)childNode;
+                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                    {
+                        ReleaseRouteTable();
+                        return currentElement.GetAttribute("IpAddress");
+                    }
+                }
+                ReleaseRouteTable();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("GetIPAddressByID: An Exception has occured." + ex.ToString());
+            }
+            return string.Empty;
+        }
+
+        public string GetNameByIDInRouterTable(string nodeId)
+        {
+            try
+            {
+                LockRouteTable();
+                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+
+                foreach (XmlNode childNode in childXmlNodes)
+                {
+                    XmlElement currentElement = (XmlElement)childNode;
+                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                    {
+                        ReleaseRouteTable();
+                        return currentElement.GetAttribute("NAME");
+                    }
+                }
+                ReleaseRouteTable();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("GetNameByIDInRouterTable: An Exception has occured." + ex.ToString());
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Set Path (Reverse or Forward Path) for Intiator Node 
+        /// (Source or Destination) and NeighbourNode from which
+        /// it received Packet
+        /// </summary>
+        public virtual void MakePathEntryForNode(Hashtable InitiatorInfoTable) { }
+
+        public void DeleteRouteEntryForNode(string nodeId)
+        {
+            LockRouteTable();
+            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+
+            foreach (XmlNode childNode in childXmlNodes)
+            {
+                XmlElement currentElement = (XmlElement)childNode;
+
+                if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                {
+                    currentElement.SelectSingleNode("HopCount").InnerText = PacketConstants.Infinity;
+                    currentElement.SelectSingleNode("NextHop").InnerText = "EMPTY";   
+                }
+            }
+            ReleaseRouteTable();
+        }
+
+        public void LockRouteTable()
+        {
+            routeTableSynchronize.WaitOne();
+        }
+
+        public void ReleaseRouteTable()
+        {
+            routeTableSynchronize.Release();
+        }
+
+    }
+
+    public class AodvRouteTable : RouteTable
+    {
+        private static volatile AodvRouteTable instance;
+        private static object syncRoot = new Object();
+
+        public static AodvRouteTable aodvRouteTableInstance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new AodvRouteTable();
+                    }
+                }
+                return instance;
+            }
+        }
+
+        private AodvRouteTable() : base() { }
+
+        public override Hashtable GetDestinationInfoFromRouteTable(string nodeId)
         {
             Hashtable destinationInfoList = new Hashtable();
 
@@ -119,100 +259,15 @@ namespace SmartDeviceApplication
             return destinationInfoList;
         }
 
-        public ArrayList GetNeighbourNodes(string nodeId)
-        {
-            ArrayList neighbourNodeList = new ArrayList();
-
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
-
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-
-                    if (!childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
-                    {
-                        neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
-                    }
-
-                }
-                ReleaseRouteTable();
-            }
-
-            catch (Exception ex)
-            {
-                //MessageBox.Show("GetNeighbourNodes : An Exception has occured." + ex.ToString());
-            }
-            return neighbourNodeList;
-        }
-
-        public string GetIPAddressByIDInRouterTable(string nodeId)
+        public override void MakePathEntryForNode(Hashtable InitiatorInfoTable)
         {
             try
             {
                 LockRouteTable();
                 XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
-
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
-                    {
-                        ReleaseRouteTable();
-                        return currentElement.GetAttribute("IpAddress");
-                    }
-
-                }
-                ReleaseRouteTable();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("GetIPAddressByID: An Exception has occured." + ex.ToString());
-            }
-            return "NA";
-        }
-
-        public string GetNameByIDInRouterTable(string nodeId)
-        {
-            string nodeIpAddress = "NA";
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
-
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
-                    {
-                        nodeIpAddress = currentElement.GetAttribute("NAME");
-                    }
-
-                }
-                ReleaseRouteTable();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("GetNameByIDInRouterTable: An Exception has occured." + ex.ToString());
-            }
-            return nodeIpAddress;
-        }
-
-        /// <summary>
-        /// Set Path (Reverse or Forward Path) for Intiator Node 
-        /// (Source or Destination) and NeighbourNode from which
-        /// it received Packet
-        /// </summary>
-        public void MakePathEntryForNode(string neighbourNodeId, Hashtable InitiatorInfoTable)
-        {
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+                string neighbourNodeId = InitiatorInfoTable["NextHop"].ToString();
                 IDictionaryEnumerator ide = InitiatorInfoTable.GetEnumerator();
-                bool updateTable=false;
+                bool updateTable = false;
 
                 foreach (XmlNode childNode in childXmlNodes)
                 {
@@ -265,42 +320,25 @@ namespace SmartDeviceApplication
                     }
 
                 }
-                ReleaseRouteTable();    
+                ReleaseRouteTable();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("MakePathEntryForNode: An Exception has occured." + ex.ToString());
             }
         }
+    }
 
-        public void DeleteRouteEntryForNode(string nodeId)
+    public class RouteTableFactory
+    {
+        public static RouteTable GetInstance(string routeTable)
         {
-            LockRouteTable();
-            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
-
-            foreach (XmlNode childNode in childXmlNodes)
+            switch (routeTable)
             {
-                XmlElement currentElement = (XmlElement)childNode;
-
-                if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
-                {
-                    currentElement.SelectSingleNode("HopCount").InnerText = PacketConstants.Infinity;
-                    currentElement.SelectSingleNode("NextHop").InnerText = "EMPTY";
-                    currentElement.SelectSingleNode("LifeTime").InnerText = PacketConstants.EmptyInt.ToString();
-                }
+                case "Aodv":
+                    return AodvRouteTable.aodvRouteTableInstance;
             }
-            ReleaseRouteTable();
+            return RouteTable.routeTableInstance;
         }
-
-        public void LockRouteTable()
-        {
-            routeTableSynchronize.WaitOne();
-        }
-
-        public void ReleaseRouteTable()
-        {
-            routeTableSynchronize.Release();
-        }
-
     }
 }

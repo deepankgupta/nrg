@@ -19,11 +19,8 @@ namespace SmartDeviceApplication
         [MTAThread]
         public static void Main()
         {
+            XmlFileUtility.Initialize();
             NetworkLayer networkLayer = NetworkLayer.networkLayerInstance;
-            TransportLayer transportLayer = TransportLayer.transportLayerInstance;
-            transportLayer.routeTimer = new TransportLayer.RouteTimer(TimerConstants.ROUTE_TIMER);
-            transportLayer.routeTimer.SetTimer();
-
             ReceiverThread = new Thread(new ThreadStart(networkLayer.
                                 ReceiveMessageServerThread));
             ReceiverThread.Priority = ThreadPriority.Highest;
@@ -39,12 +36,11 @@ namespace SmartDeviceApplication
             try
             {
                 NetworkLayer networklayer = NetworkLayer.networkLayerInstance;
-                TransportLayer transportLayer = TransportLayer.transportLayerInstance;
-
-                transportLayer.routeTimer.ReleaseTimer();
-                transportLayer.dataPacketTimer.ReleaseTimer();
+                SessionLayer sessionLayer = SessionLayer.sessionLayerInstance;
+                
                 Program.ReceiverThread.Abort();
-                networklayer.udpReceiverSocket.Close();
+                networklayer.ResetAll();
+                sessionLayer.ResetAll();
                 Application.Exit();
             }
             catch (Exception e)

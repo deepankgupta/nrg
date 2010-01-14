@@ -26,8 +26,8 @@ namespace SmartDeviceApplication
     {
         private Node node;
         private Hashtable hashBuddyList;
-        private RouterTableClass routeTable;
-        private PresentationLayer presentationLayer;
+        private RouteTable routeTable;
+        private SessionLayer sessionLayer;
         public ChatWindowPanel showChatWindowDelegate;
         public UpdateChatWindow updateChatWindowDelegate;
         public HideChatWindowPanel hideChatWindowDelegate;
@@ -61,7 +61,7 @@ namespace SmartDeviceApplication
 
                 hashBuddyList = new Hashtable();
                 node = Node.nodeInstance;
-                routeTable = RouterTableClass.routeTableInstance;   
+                routeTable =RouteTable.routeTableInstance;   
             }
             catch (Exception e)
             {
@@ -87,11 +87,7 @@ namespace SmartDeviceApplication
         private static void ResetAll(MessageApplicationForm messageForm)
         {
             messageForm.ChatList.Items.Clear();
-        }
-
-        public void ResetAll()
-        {
-            ChatList.Items.Clear();
+            messageForm.MessageTextBox.Text = "";
         }
 
         private void MessageApplicationForm_Load(object sender, EventArgs e)
@@ -100,7 +96,7 @@ namespace SmartDeviceApplication
             {
                 SetHashBuddyList();
                 ShowBuddyList();
-                LabelID.Text = "My Name: " + Node.name;
+                LabelID.Text = "My Name: " + node.name;
                 ChatList.View = View.Details;
                 ChatList.FullRowSelect = true;
                 ChatList.Columns.Add("Chats", -2, HorizontalAlignment.Left);
@@ -116,9 +112,7 @@ namespace SmartDeviceApplication
         {
             try
             {
-                Monitor.Enter(routeTable.routeTableXml);
-
-                XmlNode rootXmlNode = routeTable.routeTableXml.DocumentElement;
+                XmlNode rootXmlNode = routeTable.routeTableDocument.DocumentElement;
                 XmlNodeList childXmlNodes = rootXmlNode.ChildNodes;
 
                 foreach (XmlNode childNode in childXmlNodes)
@@ -127,14 +121,13 @@ namespace SmartDeviceApplication
                     string nodeName;
                     XmlElement currentElement = (XmlElement)childNode;
 
-                    if (!currentElement.GetAttribute("DestinationID").Equals(Node.id))
+                    if (!currentElement.GetAttribute("DestinationID").Equals(node.id))
                     {
                         nodeId = currentElement.GetAttribute("DestinationID").ToString();
                         nodeName = currentElement.GetAttribute("NAME").ToString();
                         hashBuddyList.Add(nodeId, nodeName);
                     }
                 }
-                Monitor.Exit(routeTable.routeTableXml);
             }
             catch (Exception e)
             {
@@ -155,7 +148,7 @@ namespace SmartDeviceApplication
                 IDictionaryEnumerator ide = hashBuddyList.GetEnumerator();
                 while (ide.MoveNext())
                 {
-                    if (!ide.Key.ToString().Equals(Node.id))
+                    if (!ide.Key.ToString().Equals(node.id))
                     {
                         ListViewItem id = new ListViewItem(ide.Key.ToString());
                         id.SubItems.Add(ide.Value.ToString());
@@ -200,17 +193,16 @@ namespace SmartDeviceApplication
         {
             try
             {
-
+                sessionLayer = SessionLayer.sessionLayerInstance;
                 if (ChatMenuItem.Text == "CHAT")
                 {
                     string buddyIdText = "NA";
                     buddyIdText = BuddyList.Items[(BuddyList.SelectedIndices[0])].SubItems[0].Text;
-                    presentationLayer = PresentationLayer.presentationLayerInstance;
 
                     if (!buddyIdText.Equals("NA"))
                     {
-                        presentationLayer.buddyId = buddyIdText;
-                        presentationLayer.PerformSenderAction("CHAT");
+                        sessionLayer.buddyId = buddyIdText;
+                        sessionLayer.PerformSenderAction("CHAT");
                         buddyIdText = "NA";
                     }
                     else
@@ -224,8 +216,7 @@ namespace SmartDeviceApplication
                 {
                     if (MessageTextBox.Text.Length > 0)
                     {
-                        presentationLayer.PerformSenderAction("SEND");
-                        MessageTextBox.Text = "";
+                        sessionLayer.PerformSenderAction("SEND");
                     }
                     else
                     {
@@ -244,10 +235,10 @@ namespace SmartDeviceApplication
 
         private void ExitMenuItem_Click(object sender, EventArgs e)
         {
+            sessionLayer = SessionLayer.sessionLayerInstance;
             if (ExitMenuItem.Text == "CLOSE")
             {
-                presentationLayer.chatTerminate = true;
-                presentationLayer.PerformSenderAction("CLOSE");
+                sessionLayer.PerformSenderAction("CLOSE");
             }
             else if (ExitMenuItem.Text == "EXIT")
             {

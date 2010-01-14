@@ -21,18 +21,20 @@ namespace SmartDeviceApplication
 
         //Elements of Packets in xml file
         public const string PACKET_TYPE = "TYPE";
-        public const string BROADCAST_ID = "BID";
+        public const string PACKET_ID = "PID";
         public const string SOURCE_ID = "SRC";
-        public const string CURRENT_ID = "CUR";
+        public const string PREVIOUS_ID = "PREV";
         public const string DESTINATION_ID = "DST";
         public const string SOURCES_SEQ_NUM = "S_SEQ";
         public const string DESTINATION_SEQ_NUM = "D_SEQ";
         public const string PAYLOAD = "MSG";
         public const string HOP_COUNT = "HOP";
+        public const string TIME_TO_LIVE = "TTL";
         public const string LIFE_TIME = "LIFE_TIME";
         public const int EmptyInt = 0;
         public const string EmptyString = "~";
         public const string Infinity = "1000";
+        public const string OneHop = "1";
 
         /*OTHER CONSTANTS*/
         public const string TIMER_EXPIRED = "Timer Expired !";

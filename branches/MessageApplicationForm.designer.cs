@@ -1,7 +1,10 @@
 using System;
+using System.ComponentModel;
+using System.Net.Sockets;
 using System.Windows.Forms;
+using System.Net;
+using System.Data;
 using System.Collections;
-
 
 namespace SmartDeviceApplication
 {
@@ -55,71 +58,94 @@ namespace SmartDeviceApplication
 
         private void InitializeComponent()
         {
-            this.mainMenu1 = new System.Windows.Forms.MainMenu();
+            this.components = new System.ComponentModel.Container();
+            this.mainMenu1 = new System.Windows.Forms.MainMenu(this.components);
             this.Options = new System.Windows.Forms.MenuItem();
             this.ChatMenuItem = new System.Windows.Forms.MenuItem();
             this.ExitMenuItem = new System.Windows.Forms.MenuItem();
             this.BuddyList = new System.Windows.Forms.ListView();
             this.MessageTextBox = new System.Windows.Forms.TextBox();
             this.LabelID = new System.Windows.Forms.Label();
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.ChatList = new System.Windows.Forms.ListView();
             this.SuspendLayout();
             // 
             // mainMenu1
             // 
-            this.mainMenu1.MenuItems.Add(this.Options);
+            this.mainMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.Options});
             // 
             // Options
             // 
-            this.Options.MenuItems.Add(this.ChatMenuItem);
-            this.Options.MenuItems.Add(this.ExitMenuItem);
+            this.Options.Index = 0;
+            this.Options.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.ChatMenuItem,
+            this.ExitMenuItem});
             this.Options.Text = "Message Options";
             // 
             // ChatMenuItem
             // 
-            this.ChatMenuItem.Text = "CHAT";
-            this.ChatMenuItem.Click += new System.EventHandler(this.ChatMenuItem_Click);
+            this.ChatMenuItem.Index = 0;
+            this.ChatMenuItem.Text = "";
             // 
             // ExitMenuItem
             // 
-            this.ExitMenuItem.Text = "EXIT";
-            this.ExitMenuItem.Click += new System.EventHandler(this.ExitMenuItem_Click);
+            this.ExitMenuItem.Index = 1;
+            this.ExitMenuItem.Text = "";
             // 
             // BuddyList
             // 
-            this.BuddyList.Location = new System.Drawing.Point(-3, 0);
+            this.BuddyList.Location = new System.Drawing.Point(0, 0);
             this.BuddyList.Name = "BuddyList";
-            this.BuddyList.Size = new System.Drawing.Size(176, 146);
+            this.BuddyList.Size = new System.Drawing.Size(101, 103);
             this.BuddyList.TabIndex = 3;
+            this.BuddyList.UseCompatibleStateImageBehavior = false;
             // 
             // MessageTextBox
             // 
-            this.MessageTextBox.Location = new System.Drawing.Point(3, 152);
+            this.MessageTextBox.Location = new System.Drawing.Point(145, 162);
             this.MessageTextBox.Name = "MessageTextBox";
-            this.MessageTextBox.Size = new System.Drawing.Size(170, 22);
+            this.MessageTextBox.Size = new System.Drawing.Size(214, 20);
             this.MessageTextBox.TabIndex = 1;
             // 
             // LabelID
             // 
-            this.LabelID.Location = new System.Drawing.Point(3, 152);
+            this.LabelID.Location = new System.Drawing.Point(-3, 119);
             this.LabelID.Name = "LabelID";
             this.LabelID.Size = new System.Drawing.Size(173, 22);
+            this.LabelID.TabIndex = 0;
             this.LabelID.Text = "  ";
+            // 
+            // listBox1
+            // 
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.Items.AddRange(new object[] {
+            "CHAT",
+            "SEND",
+            "CLOSE",
+            "EXIT"});
+            this.listBox1.Location = new System.Drawing.Point(6, 162);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(95, 56);
+            this.listBox1.TabIndex = 4;
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // ChatList
             // 
-            this.ChatList.Location = new System.Drawing.Point(0, 3);
+            this.ChatList.Location = new System.Drawing.Point(145, 15);
             this.ChatList.Name = "ChatList";
-            this.ChatList.Size = new System.Drawing.Size(176, 134);
-            this.ChatList.TabIndex = 4;
+            this.ChatList.Size = new System.Drawing.Size(214, 97);
+            this.ChatList.TabIndex = 5;
+            this.ChatList.UseCompatibleStateImageBehavior = false;
             // 
             // MessageApplicationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(176, 180);
+            this.ClientSize = new System.Drawing.Size(371, 250);
             this.Controls.Add(this.ChatList);
+            this.Controls.Add(this.listBox1);
             this.Controls.Add(this.LabelID);
             this.Controls.Add(this.BuddyList);
             this.Controls.Add(this.MessageTextBox);
@@ -128,6 +154,7 @@ namespace SmartDeviceApplication
             this.Text = "MessageApplicationForm";
             this.Load += new System.EventHandler(this.MessageApplicationForm_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -139,6 +166,7 @@ namespace SmartDeviceApplication
         private System.Windows.Forms.ListView BuddyList;
         public System.Windows.Forms.TextBox MessageTextBox;
         private System.Windows.Forms.Label LabelID;
+        private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.ListView ChatList;
     }
 }

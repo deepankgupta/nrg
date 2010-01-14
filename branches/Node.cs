@@ -27,7 +27,7 @@ namespace SmartDeviceApplication
             public int zCoord;
         }
 
-        public static XmlDocument confXmlDoc;
+        public static XmlDocument confFileDocument;
         private static volatile Node instance;
         private static object syncRoot = new Object();
 
@@ -54,11 +54,11 @@ namespace SmartDeviceApplication
 
         public void InitializeNode()
         {
-            confXmlDoc = XmlFileUtility.FindXmlDoc(XmlFileUtility.ConfFile);
+            confFileDocument = XmlFileUtility.configFileDocument;
 
             try
             {
-                XmlNode rootNode = confXmlDoc.DocumentElement;
+                XmlNode rootNode = confFileDocument.DocumentElement;
                 XmlElement currentElement = (XmlElement)rootNode.FirstChild;
 
                 id = currentElement.GetAttribute("ID");
