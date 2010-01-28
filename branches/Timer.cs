@@ -74,15 +74,22 @@ namespace SmartDeviceApplication
         public void ReleaseAllTimerThread()
         {
             WaitBufferWindow();
+            bool flag = false;
             bufferWindowForStreamSent.Clear();
             IDictionaryEnumerator ide = threadWindowForStreamSent.GetEnumerator();
             while (ide.MoveNext())
             {
                 Thread storedThread = (Thread)ide.Value;
-                storedThread.Abort();
+                if (!storedThread.ManagedThreadId.Equals(Thread.CurrentThread.ManagedThreadId))
+                    storedThread.Abort();
+                else
+                    flag = true;
             }
             threadWindowForStreamSent.Clear();
             SignalBufferWindow();
+
+            if (flag == true)
+                Thread.CurrentThread.Abort();
         }
 
         public void UpdateThreadWindow(string storedStreamId)

@@ -1,8 +1,8 @@
 using System;
 using System.Net.Sockets;
 using System.Net;
-using OpenNETCF;
 using OpenNETCF.Threading;
+using System.Threading;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -55,32 +55,27 @@ namespace SmartDeviceApplication
             XmlNode rootXmlNode = routeTableDocument.DocumentElement;
             return rootXmlNode.ChildNodes;
         }
-        
+
         public bool IsDestinationPathEmpty(string nodeId)
         {
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
-                foreach (XmlNode childNode in childXmlNodes)
+            LockRouteTable();
+            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+
+            foreach (XmlNode childNode in childXmlNodes)
+            {
+                XmlElement currentElement = (XmlElement)childNode;
+                if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
                 {
-                    XmlElement currentElement = (XmlElement)childNode;
-                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                    if (currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
                     {
-                        if (currentElement.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.Infinity))
-                        {
-                            ReleaseRouteTable();
-                            return true;
-                        }
+                        ReleaseRouteTable();
+                        return true;
                     }
                 }
-                ReleaseRouteTable();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("IsDestinationPathEmpty: An Exception has occured." + ex.ToString());
-            }
+            ReleaseRouteTable();
+
             return false;
         }
 
@@ -93,51 +88,40 @@ namespace SmartDeviceApplication
         {
             ArrayList neighbourNodeList = new ArrayList();
 
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+            LockRouteTable();
+            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
-                foreach (XmlNode childNode in childXmlNodes)
+            foreach (XmlNode childNode in childXmlNodes)
+            {
+                XmlElement currentElement = (XmlElement)childNode;
+
+                if (childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.OneHop))
                 {
-                    XmlElement currentElement = (XmlElement)childNode;
-
-                    if (childNode.SelectSingleNode("HopCount").InnerText.Equals(PacketConstants.OneHop))
-                    {
-                        neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
-                    }
+                    neighbourNodeList.Add(currentElement.GetAttribute("DestinationID"));
                 }
-                ReleaseRouteTable();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("GetNeighbourNodes : An Exception has occured." + ex.ToString());
-            }
+            ReleaseRouteTable();
+
+
             return neighbourNodeList;
         }
 
         public string GetIPAddressByIDInRouterTable(string nodeId)
         {
-            try
-            {
-                LockRouteTable();
-                XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
+            LockRouteTable();
+            XmlNodeList childXmlNodes = GetNodesInRouteXmlFile();
 
-                foreach (XmlNode childNode in childXmlNodes)
-                {
-                    XmlElement currentElement = (XmlElement)childNode;
-                    if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
-                    {
-                        ReleaseRouteTable();
-                        return currentElement.GetAttribute("IpAddress");
-                    }
-                }
-                ReleaseRouteTable();
-            }
-            catch (Exception ex)
+            foreach (XmlNode childNode in childXmlNodes)
             {
-                MessageBox.Show("GetIPAddressByID: An Exception has occured." + ex.ToString());
+                XmlElement currentElement = (XmlElement)childNode;
+                if (currentElement.GetAttribute("DestinationID").Equals(nodeId))
+                {
+                    ReleaseRouteTable();
+                    return currentElement.GetAttribute("IpAddress");
+                }
             }
+            ReleaseRouteTable();
+
             return string.Empty;
         }
 
