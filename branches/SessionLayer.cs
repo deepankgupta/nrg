@@ -1,6 +1,8 @@
 using System;
 using System.Xml;
 using System.Threading;
+using OpenNETCF;
+using OpenNETCF.Threading;
 using System.ComponentModel;
 using System.Net.Sockets;
 using System.Windows.Forms;
@@ -155,7 +157,7 @@ namespace SmartDeviceApplication
                     packet = packetBuilder.SetPacketType(PacketConstants.START_CHAT_PACKET).BuildAll();
                     sessionId = node.id + buddyId;
                     chatInitiate = true;
-                    SendPacketToLowerLayer(packet, PacketConstants.EmptyString, buddyId);
+                    PrepareSessionLayerStream(packet, PacketConstants.EmptyString, buddyId);
                 }
                 else
                 {
@@ -171,7 +173,7 @@ namespace SmartDeviceApplication
                 packet = packetBuilder.SetPacketType(PacketConstants.TERMINATE_CHAT_PACKET).BuildAll();
                 dataPacketTimer.ReleaseTimer(packet.packetId);
                 this.ResetAll();
-                SendPacketToLowerLayer(packet, PacketConstants.EmptyString, buddyId);
+                PrepareSessionLayerStream(packet, PacketConstants.EmptyString, buddyId);
             }
 
             if (optionSelected.Equals("SEND"))
@@ -185,7 +187,7 @@ namespace SmartDeviceApplication
                 objectItems[2] = messageForm.MessageTextBox.Text;
 
                 messageForm.Invoke(messageForm.updateChatWindowDelegate, new object[] { objectItems });
-                SendPacketToLowerLayer(packet, messageForm.MessageTextBox.Text, buddyId);
+                PrepareSessionLayerStream(packet, messageForm.MessageTextBox.Text, buddyId);
             }
         }
 
@@ -227,7 +229,7 @@ namespace SmartDeviceApplication
                         SessionLayerPacket acceptChatPacket = packetBuilder.SetPacketType(PacketConstants.
                                                                 ACCEPT_START_CHAT_PACKET).BuildAll();
                         messageForm.Invoke(messageForm.showChatWindowDelegate, messageForm);
-                        SendPacketToLowerLayer(acceptChatPacket, upperLayerStream, buddyId);
+                        PrepareSessionLayerStream(acceptChatPacket, upperLayerStream, buddyId);
                     }
                 }
 
@@ -235,7 +237,7 @@ namespace SmartDeviceApplication
                 {
                     SessionLayerPacket rejectChatPacket = packetBuilder.SetPacketType(PacketConstants.
                                                                     REJECT_START_CHAT_PACKET).BuildAll();
-                    SendPacketToLowerLayer(rejectChatPacket, upperLayerStream, receivedPacket.sourceId);
+                    PrepareSessionLayerStream(rejectChatPacket, upperLayerStream, receivedPacket.sourceId);
                 }
             }
 
@@ -320,11 +322,10 @@ namespace SmartDeviceApplication
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public void SendPacketToLowerLayer(SessionLayerPacket packet, string upperLayerStream,
+        public void PrepareSessionLayerStream(SessionLayerPacket packet, string upperLayerStream,
                                                                         string destinationId)
         {
             sessionLayerStream = packet.CreateStreamFromPacket();
-
             string combinedDataStream = XmlFileUtility.CombineLayerStreams(applicationHeaderElement,
                                                    sessionLayerStream, upperLayerStream);
             if (!(packet.packetType.Equals(PacketConstants.TERMINATE_CHAT_PACKET) ||
@@ -334,6 +335,11 @@ namespace SmartDeviceApplication
                 dataPacketTimer.SetTimer(packet.packetId);
             }
 
+            SendPacketToLowerLayer(combinedDataStream, destinationId);
+        }
+        
+        public void SendPacketToLowerLayer(string combinedDataStream, string destinationId)
+        {
             networkLayer = NetworkLayer.networkLayerInstance;
             networkLayer.AddNetworkLayerStream(combinedDataStream, destinationId);
         }
