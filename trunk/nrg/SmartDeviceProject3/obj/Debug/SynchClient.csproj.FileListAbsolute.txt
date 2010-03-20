@@ -1,0 +1,5 @@
+C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SmartDeviceProject3\SmartDeviceProject3\bin\Debug\SmartDeviceProject3.exe
+C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SmartDeviceProject3\SmartDeviceProject3\bin\Debug\SmartDeviceProject3.pdb
+C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SmartDeviceProject3\SmartDeviceProject3\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SmartDeviceProject3\SmartDeviceProject3\obj\Debug\SmartDeviceProject3.exe
+C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SmartDeviceProject3\SmartDeviceProject3\obj\Debug\SmartDeviceProject3.pdb
