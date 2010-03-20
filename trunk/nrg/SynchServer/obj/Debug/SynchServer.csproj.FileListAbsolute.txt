@@ -1,5 +1,0 @@
-C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SynchServer\SynchServer\obj\Debug\ResolveAssemblyReference.cache
-C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SynchServer\SynchServer\bin\Debug\SynchServer.exe
-C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SynchServer\SynchServer\bin\Debug\SynchServer.pdb
-C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SynchServer\SynchServer\obj\Debug\SynchServer.exe
-C:\Users\hitesh\Documents\Visual Studio 2008\Projects\SynchServer\SynchServer\obj\Debug\SynchServer.pdb
